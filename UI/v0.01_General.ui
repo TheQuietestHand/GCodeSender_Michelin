@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DialogGeneral</class>
+ <widget class="QDialog" name="DialogGeneral">
+  <property name="enabled">
+   <bool>false</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>210</width>
+    <height>217</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>210</width>
+    <height>217</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>210</width>
+    <height>217</height>
+   </size>
+  </property>
+  <property name="baseSize">
+   <size>
+    <width>210</width>
+    <height>217</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>General</string>
+  </property>
+  <widget class="QCheckBox" name="checkBoxAgresivePreload">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>191</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Use agresive preload strategy for Grbl</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBox">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>30</y>
+     <width>191</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Write logs in txt file</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelSWaitToResponde">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>70</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Seconds wait to response:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelZJogRate">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>90</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Z-Jog rate (mm/min):</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBox_2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>50</y>
+     <width>191</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="acceptDrops">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Calculate feed rate and spindle speed in real time</string>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="autoRepeat">
+    <bool>false</bool>
+   </property>
+   <property name="autoExclusive">
+    <bool>false</bool>
+   </property>
+   <property name="tristate">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelCutterDiameter">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>110</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Cutter diameter:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelSurfaceSpeed">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>130</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Surface speed:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelToothLoad">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>150</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Feed/tooth (tooth load):</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelNumberOfTeeth">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>170</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Number of teeth:</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButtonOk">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>190</y>
+     <width>81</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Ok</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinBoxSWaitToResponse">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>70</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="frame">
+    <bool>false</bool>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>999</number>
+   </property>
+   <property name="value">
+    <number>60</number>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="doubleSpinBoxZJogRate">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>90</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="frame">
+    <bool>false</bool>
+   </property>
+   <property name="minimum">
+    <double>0.010000000000000</double>
+   </property>
+   <property name="maximum">
+    <double>9999.989999999999782</double>
+   </property>
+   <property name="singleStep">
+    <double>0.010000000000000</double>
+   </property>
+   <property name="value">
+    <double>259.990000000000009</double>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="doubleSpinBoxCutterDiameter">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>110</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="frame">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinBoxSurfaceSpeed">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>130</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="frame">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="doubleSpinBoxToothLoad">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>150</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="frame">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinBoxNumberOfTeeth">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>170</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="frame">
+    <bool>false</bool>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

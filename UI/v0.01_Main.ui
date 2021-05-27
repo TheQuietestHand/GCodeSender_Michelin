@@ -1,0 +1,1751 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>803</width>
+    <height>490</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>803</width>
+    <height>490</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>803</width>
+    <height>490</height>
+   </size>
+  </property>
+  <property name="baseSize">
+   <size>
+    <width>803</width>
+    <height>490</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_7">
+    <item row="0" column="0">
+     <widget class="QWidget" name="widget" native="true">
+      <widget class="QWidget" name="gridLayoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>0</y>
+         <width>211</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBoxState">
+          <property name="title">
+           <string>State</string>
+          </property>
+          <widget class="QPushButton" name="pushButtonPause">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>10</y>
+             <width>56</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Pause</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonResume">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>80</x>
+             <y>10</y>
+             <width>56</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Resume</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonStop">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>140</x>
+             <y>10</y>
+             <width>56</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>STOP</string>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelRuntime">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>30</y>
+             <width>71</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Runtime:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelRemainingTime">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>40</y>
+             <width>71</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Remaining Time:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelLastState">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>70</y>
+             <width>71</width>
+             <height>21</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Last state:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelRuntimeVar">
+           <property name="geometry">
+            <rect>
+             <x>120</x>
+             <y>30</y>
+             <width>71</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>00:00:00</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelRemainingTimeVar">
+           <property name="geometry">
+            <rect>
+             <x>120</x>
+             <y>40</y>
+             <width>71</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>00:00:00</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelLastStateVar">
+           <property name="geometry">
+            <rect>
+             <x>120</x>
+             <y>70</y>
+             <width>71</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+             <weight>75</weight>
+             <italic>false</italic>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>NaN</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelQueuedCommands">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>50</y>
+             <width>81</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Queued commands:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelQueuedCommandsVar">
+           <property name="geometry">
+            <rect>
+             <x>130</x>
+             <y>50</y>
+             <width>51</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="gridLayoutWidget_2">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>100</y>
+         <width>211</width>
+         <height>231</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QTabWidget" name="tabWidget">
+          <property name="font">
+           <font>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tabCode">
+           <attribute name="title">
+            <string>Code</string>
+           </attribute>
+           <widget class="QListView" name="listViewCode">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>10</y>
+              <width>141</width>
+              <height>191</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QLabel" name="labelCodeLines">
+            <property name="geometry">
+             <rect>
+              <x>140</x>
+              <y>10</y>
+              <width>61</width>
+              <height>20</height>
+             </rect>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Lines:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+           <widget class="QLabel" name="label">
+            <property name="geometry">
+             <rect>
+              <x>140</x>
+              <y>30</y>
+              <width>61</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+           <widget class="Line" name="line">
+            <property name="geometry">
+             <rect>
+              <x>140</x>
+              <y>40</y>
+              <width>71</width>
+              <height>20</height>
+             </rect>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+           <widget class="QLabel" name="labelStartFrom">
+            <property name="geometry">
+             <rect>
+              <x>140</x>
+              <y>50</y>
+              <width>61</width>
+              <height>20</height>
+             </rect>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Start from:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+           <widget class="QSpinBox" name="spinBoxStartFrom">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>150</x>
+              <y>70</y>
+              <width>41</width>
+              <height>22</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QLabel" name="labelStartFrom_2">
+            <property name="geometry">
+             <rect>
+              <x>140</x>
+              <y>90</y>
+              <width>61</width>
+              <height>20</height>
+             </rect>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Do to:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+           <widget class="QSpinBox" name="spinBoxDoTo">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>150</x>
+              <y>110</y>
+              <width>41</width>
+              <height>22</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QLabel" name="labelPeriod">
+            <property name="geometry">
+             <rect>
+              <x>140</x>
+              <y>130</y>
+              <width>61</width>
+              <height>21</height>
+             </rect>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+              <italic>false</italic>
+             </font>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
+            </property>
+            <property name="text">
+             <string>Period</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+           <widget class="QSpinBox" name="spinBoxPeriod">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>150</x>
+              <y>150</y>
+              <width>41</width>
+              <height>22</height>
+             </rect>
+            </property>
+            <property name="minimum">
+             <number>60</number>
+            </property>
+            <property name="maximum">
+             <number>500</number>
+            </property>
+            <property name="value">
+             <number>100</number>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonRunCode">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>150</x>
+              <y>180</y>
+              <width>41</width>
+              <height>21</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Run</string>
+            </property>
+           </widget>
+          </widget>
+          <widget class="QWidget" name="tabConsole">
+           <attribute name="title">
+            <string>Console</string>
+           </attribute>
+           <widget class="QListWidget" name="listWidget">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>10</y>
+              <width>141</width>
+              <height>191</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblSettings">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>57</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Grbl Settings</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblParameters">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>73</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Parameters</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblParserState">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>89</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Parser state</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblBuildInfo">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>105</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Build info</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblStartupBlocks">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>121</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Startup blocks</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblCheck">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>137</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Check</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblUnlock">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>153</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Unlock GRBL</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblHomingCycle">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>169</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Homing cycle</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblRefreshPos">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>185</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Refresh pos</string>
+            </property>
+           </widget>
+           <widget class="QLabel" name="label_2">
+            <property name="geometry">
+             <rect>
+              <x>137</x>
+              <y>10</y>
+              <width>71</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Grbl commands</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="pushButtonGrblHelp">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>144</x>
+              <y>25</y>
+              <width>60</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Help</string>
+            </property>
+           </widget>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="gridLayoutWidget_3">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>330</y>
+         <width>211</width>
+         <height>111</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBoxLogs">
+          <property name="title">
+           <string>Logs</string>
+          </property>
+          <widget class="QListWidget" name="listWidgetLogs">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>10</y>
+             <width>211</width>
+             <height>100</height>
+            </rect>
+           </property>
+           <property name="isWrapping" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="gridLayoutWidget_4">
+       <property name="geometry">
+        <rect>
+         <x>230</x>
+         <y>0</y>
+         <width>381</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBoxXYZ">
+          <property name="title">
+           <string>XYZ Motion</string>
+          </property>
+          <widget class="QLabel" name="labelXMachine">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>30</y>
+             <width>20</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>15</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="text">
+            <string>X:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelYMachine">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>50</y>
+             <width>20</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>15</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Y:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelZMachine">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>70</y>
+             <width>20</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>15</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Z:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelMachineXYZ">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>10</y>
+             <width>61</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+            </font>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="text">
+            <string>Machine</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelXWork">
+           <property name="geometry">
+            <rect>
+             <x>100</x>
+             <y>30</y>
+             <width>20</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>15</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="text">
+            <string>X:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelYWork">
+           <property name="geometry">
+            <rect>
+             <x>100</x>
+             <y>50</y>
+             <width>20</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>15</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Y:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelZWork">
+           <property name="geometry">
+            <rect>
+             <x>100</x>
+             <y>70</y>
+             <width>20</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>15</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Z:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelWorkXYZ">
+           <property name="geometry">
+            <rect>
+             <x>120</x>
+             <y>10</y>
+             <width>81</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+            </font>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="text">
+            <string>Work</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelZUnits">
+           <property name="geometry">
+            <rect>
+             <x>180</x>
+             <y>70</y>
+             <width>21</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="text">
+            <string>mm</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelYUnits">
+           <property name="geometry">
+            <rect>
+             <x>180</x>
+             <y>50</y>
+             <width>21</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="text">
+            <string>mm</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelXUnits">
+           <property name="geometry">
+            <rect>
+             <x>180</x>
+             <y>30</y>
+             <width>21</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="text">
+            <string>mm</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelFeedRate">
+           <property name="geometry">
+            <rect>
+             <x>210</x>
+             <y>10</y>
+             <width>71</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+            </font>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="text">
+            <string>Feed rate</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelFeedRateUnits">
+           <property name="geometry">
+            <rect>
+             <x>240</x>
+             <y>30</y>
+             <width>41</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="text">
+            <string>mm/min</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelSpeedSpindleUnits">
+           <property name="geometry">
+            <rect>
+             <x>320</x>
+             <y>30</y>
+             <width>41</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="text">
+            <string>rpm</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelSpindleSpeed">
+           <property name="geometry">
+            <rect>
+             <x>290</x>
+             <y>10</y>
+             <width>71</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+            </font>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="text">
+            <string>Spindle speed</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonHome">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>210</x>
+             <y>50</y>
+             <width>71</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Home</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonZero">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>290</x>
+             <y>50</y>
+             <width>71</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Zero</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonSetZero">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>210</x>
+             <y>70</y>
+             <width>151</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Set zero</string>
+           </property>
+          </widget>
+          <widget class="QLineEdit" name="lineEditXWork">
+           <property name="geometry">
+            <rect>
+             <x>120</x>
+             <y>30</y>
+             <width>61</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+           <property name="frame">
+            <bool>true</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QLineEdit" name="lineEditYWork">
+           <property name="geometry">
+            <rect>
+             <x>120</x>
+             <y>50</y>
+             <width>61</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QLineEdit" name="lineEditZWork">
+           <property name="geometry">
+            <rect>
+             <x>120</x>
+             <y>70</y>
+             <width>61</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QLineEdit" name="lineEditXMachine">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>30</y>
+             <width>61</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QLineEdit" name="lineEditYMachine">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>50</y>
+             <width>61</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QLineEdit" name="lineEditZMachine">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>70</y>
+             <width>61</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QLineEdit" name="lineEditFeedRate">
+           <property name="geometry">
+            <rect>
+             <x>210</x>
+             <y>30</y>
+             <width>31</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QLineEdit" name="lineEditSpeedSpindle">
+           <property name="geometry">
+            <rect>
+             <x>290</x>
+             <y>30</y>
+             <width>31</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="gridLayoutWidget_5">
+       <property name="geometry">
+        <rect>
+         <x>620</x>
+         <y>0</y>
+         <width>161</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBoxManualControl">
+          <property name="title">
+           <string>Manual control</string>
+          </property>
+          <widget class="QLabel" name="labelXManualControl">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>30</y>
+             <width>20</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>15</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LeftToRight</enum>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="text">
+            <string>X:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelYManualControl">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>50</y>
+             <width>20</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>15</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Y:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelZManualControl">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>70</y>
+             <width>20</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>15</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Z:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonXManualControlPlus">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>30</y>
+             <width>21</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>+</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonYManualControlPlus">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>50</y>
+             <width>21</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>+</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonZManualControlPlus">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>70</y>
+             <width>21</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>+</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonXManualControlMinus">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>60</x>
+             <y>30</y>
+             <width>21</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonYManualControlMinus">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>60</x>
+             <y>50</y>
+             <width>21</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButtonZManualControlMinus">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>60</x>
+             <y>70</y>
+             <width>21</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelStep">
+           <property name="geometry">
+            <rect>
+             <x>90</x>
+             <y>10</y>
+             <width>61</width>
+             <height>16</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+            </font>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="text">
+            <string>Step</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QDoubleSpinBox" name="doubleSpinBoxStep">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>90</x>
+             <y>30</y>
+             <width>61</width>
+             <height>21</height>
+            </rect>
+           </property>
+           <property name="accelerated">
+            <bool>true</bool>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+          <widget class="QCheckBox" name="checkBoxG90Step">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="geometry">
+            <rect>
+             <x>90</x>
+             <y>50</y>
+             <width>61</width>
+             <height>20</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>G90</string>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="gridLayoutWidget_6">
+       <property name="geometry">
+        <rect>
+         <x>230</x>
+         <y>99</y>
+         <width>551</width>
+         <height>341</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBoxVisualisation">
+          <property name="autoFillBackground">
+           <bool>false</bool>
+          </property>
+          <property name="title">
+           <string>Visualisation</string>
+          </property>
+          <widget class="QOpenGLWidget" name="openGLWidget">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>9</y>
+             <width>551</width>
+             <height>301</height>
+            </rect>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>803</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionLoad"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuConnection">
+    <property name="title">
+     <string>Connection</string>
+    </property>
+    <addaction name="actionSoft_reset"/>
+    <addaction name="actionReset"/>
+    <addaction name="separator"/>
+    <addaction name="actionConnect"/>
+   </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="actionGeneral"/>
+    <addaction name="actionFiltering"/>
+    <addaction name="actionDisplay"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+    <addaction name="separator"/>
+    <addaction name="actionManual"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuConnection"/>
+   <addaction name="menuSettings"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionLoad">
+   <property name="text">
+    <string>Load</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionSoft_reset">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Soft reset</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionConnect">
+   <property name="text">
+    <string>Connect</string>
+   </property>
+  </action>
+  <action name="actionGeneral">
+   <property name="text">
+    <string>General</string>
+   </property>
+  </action>
+  <action name="actionFiltering">
+   <property name="text">
+    <string>Filtering</string>
+   </property>
+  </action>
+  <action name="actionDisplay">
+   <property name="text">
+    <string>Display</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionManual">
+   <property name="text">
+    <string>Manual</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
