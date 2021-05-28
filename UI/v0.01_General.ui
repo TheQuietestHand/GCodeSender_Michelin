@@ -3,7 +3,7 @@
  <class>DialogGeneral</class>
  <widget class="QDialog" name="DialogGeneral">
   <property name="enabled">
-   <bool>false</bool>
+   <bool>true</bool>
   </property>
   <property name="geometry">
    <rect>
@@ -292,5 +292,22 @@
   </widget>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButtonOk</sender>
+   <signal>clicked()</signal>
+   <receiver>DialogGeneral</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>121</x>
+     <y>197</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>112</x>
+     <y>187</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

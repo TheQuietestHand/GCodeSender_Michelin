@@ -3,7 +3,7 @@
  <class>DialogFiltering</class>
  <widget class="QDialog" name="DialogFiltering">
   <property name="enabled">
-   <bool>false</bool>
+   <bool>true</bool>
   </property>
   <property name="geometry">
    <rect>
@@ -176,5 +176,22 @@
   </widget>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButtonOk</sender>
+   <signal>clicked()</signal>
+   <receiver>DialogFiltering</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>175</x>
+     <y>71</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>152</x>
+     <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
