@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -13,23 +14,25 @@ from components.connect_window import Ui_DialogConnect
 from components.filtering_window import Ui_DialogFiltering
 from logic import GCodeSender
 
-
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.gsender = GCodeSender()
         self.setupUi(self)
-        self.connectSignalsSlots()
+        self.connect_signals_slots()
+        self.logger = logging.getLogger("GCodeSender")
+        self.logger.setLevel(5)
+        self.logger.propagate = False
+        self.GCodeSender = GCodeSender(callback)
 
-    def connectSignalsSlots(self):
-        self.actionLoad.triggered.connect(self.getFileName)
+    def connect_signals_slots(self):
+        self.actionLoad.triggered.connect(self.load_file)
         self.actionExit.triggered.connect(self.close)
         self.actionGeneral.triggered.connect(self.general)
         self.actionFiltering.triggered.connect(self.filtering)
         self.actionDisplay.triggered.connect(self.display)
         self.actionConnect.triggered.connect(self.connect)
 
-    def getFileName(self):
+    def load_file(self):
         file_filter = "Text files (*.txt)|*.txt"
         response = QFileDialog.getOpenFileName(
             parent=self,
@@ -38,7 +41,7 @@ class Window(QMainWindow, Ui_MainWindow):
             filter=file_filter,
             initialFilter="Text files (*.txt)|*.txt"
         )
-        self.gsender.loadFile(response[0])
+        self.GCodeSender.load_file(response[0])
 
     def general(self):
         dialog_general = DialogGeneral(self)
@@ -57,16 +60,17 @@ class Window(QMainWindow, Ui_MainWindow):
         dialog_connect.exec()
 
 
+
 class DialogGeneral(QDialog, Ui_DialogGeneral):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self.connectSignalsSlots()
+        self.connect_signals_slots()
 
-    def connectSignalsSlots(self):
-        self.checkBoxCalculate.stateChanged.connect(self.calculateFeed)
+    def connect_signals_slots(self):
+        self.checkBoxCalculate.stateChanged.connect(self.calculate_feed)
 
-    def calculateFeed(self):
+    def calculate_feed(self):
         if self.checkBoxCalculate.isChecked():
             self.doubleSpinBoxCutterDiameter.setEnabled(True)
             self.spinBoxSurfaceSpeed.setEnabled(True)
@@ -83,12 +87,12 @@ class DialogFiltering(QDialog, Ui_DialogFiltering):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self.connectSignalsSlots()
+        self.connect_signals_slots()
 
-    def connectSignalsSlots(self):
-        self.checkBoxLimitZRate.stateChanged.connect(self.limitZRate)
+    def connect_signals_slots(self):
+        self.checkBoxLimitZRate.stateChanged.connect(self.limit_z_rate)
 
-    def limitZRate(self):
+    def limit_z_rate(self):
         if self.checkBoxLimitZRate.isChecked():
             self.doubleSpinBoxZRateLimit.setEnabled(True)
             self.doubleSpinBoxXYRate.setEnabled(True)
@@ -101,12 +105,12 @@ class DialogDisplay(QDialog, Ui_DialogDisplay):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self.connectSignalsSlots()
+        self.connect_signals_slots()
 
-    def connectSignalsSlots(self):
-        self.checkBoxEnablePositionRequest.stateChanged.connect(self.enablePositionRequest)
+    def connect_signals_slots(self):
+        self.checkBoxEnablePositionRequest.stateChanged.connect(self.enable_position_request)
 
-    def enablePositionRequest(self):
+    def enable_position_request(self):
         if self.checkBoxEnablePositionRequest.isChecked():
             self.radioButtonAlwaysRequest.setEnabled(True)
             self.radioButtonAlwaysWithoutIDLE.setEnabled(True)
@@ -124,6 +128,11 @@ class DialogConnect(QDialog, Ui_DialogConnect):
         super().__init__(parent)
         self.setupUi(self)
 
+def callback(eventstring, *data):
+    args = []
+    for d in data:
+        args.append(str(d))
+    print("MY CALLBACK: event={} data={}".format(eventstring.ljust(30), ", ".join(args)))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
