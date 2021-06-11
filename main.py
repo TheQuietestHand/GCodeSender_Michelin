@@ -3,9 +3,10 @@ import os
 import sys
 
 from PyQt5.QtWidgets import (
-    QApplication, QDialog, QMainWindow, QFileDialog
+    QApplication, QDialog, QMainWindow, QFileDialog, QAbstractItemView
 )
 from PyQt5.uic import loadUi
+from pyqt5_plugins.examplebuttonplugin import QtGui
 
 from components.main_window import Ui_MainWindow
 from components.general_window import Ui_DialogGeneral
@@ -14,15 +15,23 @@ from components.connect_window import Ui_DialogConnect
 from components.filtering_window import Ui_DialogFiltering
 from logic import GCodeSender
 
+
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+
+        self.logs_model = QtGui.QStandardItemModel()
+        self.listViewLogs.setModel(self.logs_model)
+        self.listViewLogs.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        self.code_model = QtGui.QStandardItemModel()
+        self.listViewCode.setModel(self.code_model)
+        self.listViewCode.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
         self.connect_signals_slots()
-        self.logger = logging.getLogger("GCodeSender")
-        self.logger.setLevel(5)
-        self.logger.propagate = False
-        self.GCodeSender = GCodeSender(callback)
+        self.GCodeSender = GCodeSender(self.callback)
+        self.GCodeSender.setup_log_handler()
 
     def connect_signals_slots(self):
         self.actionLoad.triggered.connect(self.load_file)
@@ -31,6 +40,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionFiltering.triggered.connect(self.filtering)
         self.actionDisplay.triggered.connect(self.display)
         self.actionConnect.triggered.connect(self.connect)
+        self.spinBoxStartFrom.valueChanged.connect(self.set_starting_line)
+        self.spinBoxDoTo.valueChanged.connect(self.set_ending_line)
 
     def load_file(self):
         file_filter = "Text files (*.txt)|*.txt"
@@ -41,7 +52,28 @@ class Window(QMainWindow, Ui_MainWindow):
             filter=file_filter,
             initialFilter="Text files (*.txt)|*.txt"
         )
+
         self.GCodeSender.load_file(response[0])
+
+        counter = 1
+        for command in self.GCodeSender.buffer:
+            word = str(counter) + ") " + command
+            item = QtGui.QStandardItem(word)
+            self.code_model.appendRow(item)
+            counter += 1
+
+
+        self.labelCodeLineQty.setNum(self.GCodeSender.buffer_size)
+
+        self.spinBoxStartFrom.setEnabled(True)
+        self.spinBoxStartFrom.setValue(1)
+        self.spinBoxStartFrom.setMinimum(1)
+        self.spinBoxStartFrom.setMaximum(self.GCodeSender.buffer_size)
+
+        self.spinBoxDoTo.setEnabled(True)
+        self.spinBoxDoTo.setValue(self.GCodeSender.buffer_size)
+        self.spinBoxDoTo.setMinimum(1)
+        self.spinBoxDoTo.setMaximum(self.GCodeSender.buffer_size)
 
     def general(self):
         dialog_general = DialogGeneral(self)
@@ -59,6 +91,19 @@ class Window(QMainWindow, Ui_MainWindow):
         dialog_connect = DialogConnect(self)
         dialog_connect.exec()
 
+    def set_starting_line(self):
+        self.GCodeSender._set_starting_line(self.spinBoxStartFrom.value())
+
+    def set_ending_line(self):
+        self.GCodeSender._set_ending_line(self.spinBoxDoTo.value())
+
+    def callback(self, eventstring, *data):
+        args = []
+        for d in data:
+            args.append(str(d))
+        log = "{} data={}".format(eventstring.ljust(30), ", ".join(args))
+        item = QtGui.QStandardItem(log)
+        self.logs_model.appendRow(item)
 
 
 class DialogGeneral(QDialog, Ui_DialogGeneral):
@@ -128,14 +173,8 @@ class DialogConnect(QDialog, Ui_DialogConnect):
         super().__init__(parent)
         self.setupUi(self)
 
-def callback(eventstring, *data):
-    args = []
-    for d in data:
-        args.append(str(d))
-    print("MY CALLBACK: event={} data={}".format(eventstring.ljust(30), ", ".join(args)))
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    win = Window()
-    win.show()
-    sys.exit(app.exec())
+app = QApplication(sys.argv)
+win = Window()
+win.show()
+sys.exit(app.exec())

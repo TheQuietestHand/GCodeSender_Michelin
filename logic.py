@@ -86,10 +86,10 @@ class GCodeSender:
         # "True" if connected to grbl
         self.connected = False
 
-        # Preprocesor is the gcode state machine emulator.
+        # Preprocessor is the gcode state machine emulator.
         # It helps to parse code before they are sent out via serial port
-        self.preprocesor = GcodeMachine()
-        self.preprocesor.callback = self.preprocesor.callback
+        self.preprocessor = GcodeMachine()
+        self.preprocessor.callback = self._preprocessor_callback
 
         # The total distance of all G-Codes in the buffer.
         self.travel_distance_buffer = {}
@@ -118,7 +118,7 @@ class GCodeSender:
         self._current_line_sent = True
         self._streaming_mode = None
         self._wait_empty_buffer = False
-        self.streaming_complete = True
+        self._streaming_complete = True
         self.job_finished = True
         self._streaming_src_ends = True
         self._streaming_enabled = False
@@ -151,10 +151,16 @@ class GCodeSender:
 
         atexit.register(self.disconnect)
 
-        self._callback("on_settings_downloaded", self.settings)
-        self._callback("on_hash_stateupdate", self.settings_hash)
-        self.preprocesor.cs_offsets = self.settings_hash
-        self._callback("on_gcode_parser_stateupdate", self.gps)
+        self._callback("Settings downloaded", self.settings)
+        self._callback("Hash state update", self.settings_hash)
+        self.preprocessor.cs_offsets = self.settings_hash
+        self._callback("Gcode parser state update", self.gps)
+
+    def setup_log_handler(self):
+        lh = CallbackLogHandler()
+        self._longhandler = lh
+        self.logger.addHandler(self._longhandler)
+        self._longhandler.callback = self._callback
 
     def load_file(self, filepath):
         if not self.job_finished:
@@ -167,15 +173,31 @@ class GCodeSender:
         with open(filepath) as file:
             self._load_file_into_buffer(file.read())
 
-        self._set_starting_line()
-        self._set_ending_line()
+    def connect(self, port=None, baudrate=115200):
+        if port is None or port.strip() == "":
+            return
+        else:
+            self._interface_port = port
+
+        if self._interface is None:
+            self.logger.info("Launching interface on port {}".format(self._interface_port))
+            self._interface = Interface(self._interface_port, baudrate)
+            self._interface.start(self._queue)
+        else:
+            self.logger.error("Cant launch interface if another is running!")
+
+        self._interface_read_do = True
+        self._thread_read_interface = threading.Thread(target=self._onread)
+        self._thread_read_interface.start()
+
+        self.soft_reset()
 
     def reset_all_settings(self):
         del self.buffer[:]
         self.buffer_size = 0
         self._current_line_nr = 0
-        self._callback("on_line_number_change", 0)
-        self._callback("on_buffer_size_change", 0)
+        self._callback("Line number change", 0)
+        self._callback("Buffer size change", 0)
         self._set_streaming_complete(True)
         self.job_finished = True
         self._set_streaming_src_ends(True)
@@ -189,51 +211,70 @@ class GCodeSender:
 
         lines = file.split("\n")
 
-        if len(file) > 0:
-            for line in lines:
-                self.preprocessor.set_line(line)
-                splited_lines = self.preprocessor.split_lines()
+        for line in lines:
+            self.preprocessor.set_line(line)
+            splited_lines = self.preprocessor.split_lines()
 
-                for l1 in splited_lines:
-                    self.preprocessor.set_line(l1)
-                    self.preprocessor.strip()
-                    self.preprocessor.tidy()
-                    self.preprocessor.parse_state()
-                    self.preprocessor.find_vars()
-                    fractionized_lines = self.preprocessor.fractionize()
+            for l1 in splited_lines:
+                self.preprocessor.set_line(l1)
+                self.preprocessor.strip()
+                self.preprocessor.tidy()
+                self.preprocessor.parse_state()
+                self.preprocessor.find_vars()
+                fractionized_lines = self.preprocessor.fractionize()
 
-                    for l2 in fractionized_lines:
-                        self.buffer.append(l2)
-                        self.buffer_size += 1
+                for l2 in fractionized_lines:
+                    self.buffer.append(l2)
+                    self.buffer_size += 1
 
-                    self.preprocessor.done()
+                self.preprocessor.done()
 
-            self._callback("on_bufsize_change", self.buffer_size)
-            self._callback("on_vars_change", self.preprocessor.vars)
-        else:
-            self.logger.error("Cant load empty file!")
+        self._callback("Buffer size change", self.buffer_size)
+        self._callback("Vars change", self.preprocessor.vars)
 
     def disconnect(self):
-        return
+        if not self.is_connected():
+            return
+
+    def soft_reset(self):
+        self._interface.write("\x18")
+        self.update_preprocessor_position()
+
+    def _preprocessor_callback(self, event, *data):
+        if event == "on_preprocessor_var_undefined":
+            self.logger.critical("Streaming stopped because undefined var founded: {}".format(data[0]))
+            self._set_streaming_src_ends(True)
+            self.stop_streaming()
+        else:
+            self._callback(event, *data)
+
+    def update_preprocessor_position(self):
+        self.preprocessor.position_m = list(self.cmpos)
+
+    def stop_streaming(self):
+        self._streaming_enabled = False
+
+    def is_connected(self):
+        return self.connected
 
     def _set_streaming_complete(self, x):
-        self.streaming_complete = x
+        self._streaming_complete = x
 
     def _set_streaming_src_ends(self, x):
         self._streaming_src_ends = x
 
     def _set_starting_line(self, x=0):
-
-        if self.buffer_size > 0:
-            if x > 0:
-                self._starting_line = x - 1
-            else:
-                self._starting_line = 0
+        self._starting_line = x
 
     def _set_ending_line(self, x=0):
+        self._ending_line = x
 
-        if self.buffer_size > 0:
-            if x > 0:
-                self._ending_line = x - 1
-            else:
-                self._ending_line = self.buffer_size - 1
+
+class CallbackLogHandler(logging.StreamHandler):
+    def __init__(self, callback=None):
+        super( CallbackLogHandler, self).__init__()
+        self.callback = callback
+
+    def emit(self, log):
+        if self.callback:
+            self.callback("Program log", log)
