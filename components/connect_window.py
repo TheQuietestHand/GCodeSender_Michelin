@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'UI/v0.01_Connect.ui'
+# Form implementation generated from reading ui file 'UIDesign/v0.01_Connect.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -37,6 +37,9 @@ class Ui_DialogConnect(object):
         self.comboBoxPortName = QtWidgets.QComboBox(self.layoutWidget)
         self.comboBoxPortName.setObjectName("comboBoxPortName")
         self.gridLayout.addWidget(self.comboBoxPortName, 1, 0, 1, 1)
+        self.pushButtonConnect = QtWidgets.QPushButton(self.layoutWidget)
+        self.pushButtonConnect.setObjectName("pushButtonConnect")
+        self.gridLayout.addWidget(self.pushButtonConnect, 2, 0, 1, 2)
         self.comboBoxBaudRate = QtWidgets.QComboBox(self.layoutWidget)
         self.comboBoxBaudRate.setObjectName("comboBoxBaudRate")
         self.comboBoxBaudRate.addItem("")
@@ -45,9 +48,6 @@ class Ui_DialogConnect(object):
         self.comboBoxBaudRate.addItem("")
         self.comboBoxBaudRate.addItem("")
         self.gridLayout.addWidget(self.comboBoxBaudRate, 1, 1, 1, 1)
-        self.pushButtonConnect = QtWidgets.QPushButton(self.layoutWidget)
-        self.pushButtonConnect.setObjectName("pushButtonConnect")
-        self.gridLayout.addWidget(self.pushButtonConnect, 2, 0, 1, 2)
 
         self.retranslateUi(DialogConnect)
         QtCore.QMetaObject.connectSlotsByName(DialogConnect)
@@ -57,19 +57,9 @@ class Ui_DialogConnect(object):
         DialogConnect.setWindowTitle(_translate("DialogConnect", "Connect"))
         self.labelPortName.setText(_translate("DialogConnect", "Port name"))
         self.labelBaudRate.setText(_translate("DialogConnect", "Baud rate"))
-        self.comboBoxBaudRate.setItemText(0, _translate("DialogConnect", "9600"))
-        self.comboBoxBaudRate.setItemText(1, _translate("DialogConnect", "19200"))
-        self.comboBoxBaudRate.setItemText(2, _translate("DialogConnect", "38400"))
-        self.comboBoxBaudRate.setItemText(3, _translate("DialogConnect", "57600"))
-        self.comboBoxBaudRate.setItemText(4, _translate("DialogConnect", "115200"))
         self.pushButtonConnect.setText(_translate("DialogConnect", "Connect"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    DialogConnect = QtWidgets.QDialog()
-    ui = Ui_DialogConnect()
-    ui.setupUi(DialogConnect)
-    DialogConnect.show()
-    sys.exit(app.exec_())
+        self.comboBoxBaudRate.setItemText(0, _translate("DialogConnect", "115200"))
+        self.comboBoxBaudRate.setItemText(1, _translate("DialogConnect", "57600"))
+        self.comboBoxBaudRate.setItemText(2, _translate("DialogConnect", "38400"))
+        self.comboBoxBaudRate.setItemText(3, _translate("DialogConnect", "19200"))
+        self.comboBoxBaudRate.setItemText(4, _translate("DialogConnect", "9600"))

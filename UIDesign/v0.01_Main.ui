@@ -1203,6 +1203,8 @@
     <addaction name="actionReset"/>
     <addaction name="separator"/>
     <addaction name="actionConnect"/>
+    <addaction name="separator"/>
+    <addaction name="actionDisconnect"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -1280,6 +1282,14 @@
   <action name="actionManual">
    <property name="text">
     <string>Manual</string>
+   </property>
+  </action>
+  <action name="actionDisconnect">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Disconnect</string>
    </property>
   </action>
  </widget>

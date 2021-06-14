@@ -80,9 +80,6 @@ class GCodeSender:
         self.logger.setLevel(5)
         self.logger.propagate = False
 
-        # "firmware" - serial port, "simulator" - simulator
-        self.target = "firmware"
-
         # "True" if connected to grbl
         self.connected = False
 
@@ -170,11 +167,15 @@ class GCodeSender:
 
         self.reset_all_settings()
 
-        with open(filepath) as file:
-            self._load_file_into_buffer(file.read())
+        try:
+            with open(filepath) as file:
+                self._load_file_into_buffer(file.read())
+        except:
+            return
 
     def connect(self, port=None, baudrate=115200):
         if port is None or port.strip() == "":
+            self.logger.error("Cant connect. Variable ""port"" is empty!")
             return
         else:
             self._interface_port = port
@@ -187,7 +188,7 @@ class GCodeSender:
             self.logger.error("Cant launch interface if another is running!")
 
         self._interface_read_do = True
-        self._thread_read_interface = threading.Thread(target=self._onread)
+        self._thread_read_interface = threading.Thread(target=self._on_read)
         self._thread_read_interface.start()
 
         self.soft_reset()
@@ -248,14 +249,157 @@ class GCodeSender:
         else:
             self._callback(event, *data)
 
+    def _on_read(self):
+        while self._interface_read_do is True:
+            line = self._queue.get()
+
+            if len(line) > 0:
+                if line[0] == "<":
+                    self._update_state(line)
+
+                elif line == "ok":
+                    self._handle_ok()
+
     def update_preprocessor_position(self):
         self.preprocessor.position_m = list(self.cmpos)
+
+    def _update_state(self, line):
+        match = re.match("<(.*?),MPos:(.*?),WPos:(.*?)>", line)
+        self.cmode = match.group(1)
+        mpos_parts = match.group(2).split(",")
+        wpos_parts = match.group(3).split(",")
+        self.cmpos = (float(mpos_parts[0]), float(mpos_parts[1]), float(mpos_parts[2]))
+        self.cwpos = (float(wpos_parts[0]), float(wpos_parts[1]), float(wpos_parts[2]))
+
+        if (self.cmode != self._last_cmode or
+                self.cmpos != self._last_cmpos or
+                self.cwpos != self._last_cwpos):
+            self._callback("State update", self.cmode, self.cmpos, self.cwpos)
+            if self._streaming_complete is True and self.cmode == "Idle":
+                self.update_preprocessor_position()
+                self.gcode_parser_state_requested = True
+
+        if self.cmpos != self._last_cmpos:
+            if self.is_moving is False:
+                self._standstill_watchdog_increment = 0
+                self.is_moving = True
+                self._callback("Movement")
+        else:
+            self._standstill_watchdog_increment += 1
+
+        if self.is_moving is True and self._standstill_watchdog_increment > 10:
+            self.is_moving = False
+            self._callback("Standstill")
+
+        self._last_cmode = self.cmode
+        self._last_cmpos = self.cmpos
+        self._last_cwpos = self.cwpos
+
+    def _rx_buffer_fill_pop(self):
+        if len(self._rx_buffer_fill) > 0:
+            self._rx_buffer_fill.pop(0)
+            processed_command = self._rx_buffer_backlog.pop(0)
+            ln = self._rx_buffer_backlog_line_number.pop(0) - 1
+            self._callback("Processed command", ln, processed_command)
+
+        if self._streaming_src_end_reached is True and len(self._rx_buffer_fill) == 0:
+            self._set_job_finished(True)
+            self._set_streaming_complete(True)
+
+    def _handle_ok(self):
+        if self._streaming_complete is False:
+            self._rx_buffer_fill_pop()
+            if not (self._wait_empty_buffer and len(self._rx_buffer_fill) > 0):
+                self._wait_empty_buffer = False
+                self._stream()
+
+    def _stream(self):
+        if self._streaming_src_ends:
+            return
+
+        if self._streaming_enabled is False:
+            return
+
+        if self._incremental_streaming:
+            self._set_next_line()
+            if self._streaming_src_ends is False:
+                self._send_current_line()
+            else:
+                self._set_job_finished(True)
+        else:
+            self._fill_rx_buffer_until_full()
 
     def stop_streaming(self):
         self._streaming_enabled = False
 
     def is_connected(self):
         return self.connected
+
+    def _fill_rx_buffer_until_full(self):
+        while True:
+            if self._current_line_sent is True:
+                self._set_next_line()
+
+            if self._streaming_src_ends is False and self._rx_buffer_can_receive_current_line():
+                self._send_current_line()
+            else:
+                break
+
+    def _rx_buffer_can_receive_current_line(self):
+        rx_free_bytes = self._rx_buffer_size - sum(self._rx_buffer_fill)
+        required_bytes = len(self._current_line) + 1
+        return rx_free_bytes >= required_bytes
+
+    def _send_current_line(self):
+        if self._error:
+            self.logger.error("Firmware reported error. Stopping streaming!")
+            self._set_streaming_src_ends(True)
+            self._set_streaming_complete(True)
+            return
+
+        self._set_streaming_complete(False)
+
+        line_length = len(self._current_line) + 1
+        self._rx_buffer_fill.append(line_length)
+        self._rx_buffer_backlog.append(self._current_line)
+        self._rx_buffer_backlog_line_number.append(self._current_line_nr)
+        self._interface_write(self._current_line + "\n")
+
+        self._current_line_sent = True
+        self._callback("Line sent", self._current_line_nr, self._current_line)
+
+    def _interface_write(self, line):
+        if self._interface:
+            self._callback("Writing", line)
+            self._interface.write(line)
+
+    def _set_next_line(self, send_comments=False):
+        progress_percent = int(100 * self._current_line_nr / self.buffer_size)
+        self._callback("Progress as a percentage", progress_percent)
+
+        if self._current_line_nr < self.buffer_size:
+            line = self.buffer[self._current_line_nr].strip()
+            self.preprocessor.set_line(line)
+            self.preprocessor.substitute_vars()
+            self.preprocessor.parse_state()
+            self.preprocessor.override_feed()
+            self.preprocessor.scale_spindle()
+
+            if send_comments is True:
+                self._current_line = self.preprocessor.line + self.preprocessor.comment
+            else:
+                self._current_line = self.preprocessor.line
+
+            self._current_line_sent = False
+            self._current_line_nr += 1
+
+            self.preprocessor.done()
+
+        else:
+            self._set_streaming_src_ends(True)
+
+    def _set_job_finished(self, x):
+        self.job_finished = x
 
     def _set_streaming_complete(self, x):
         self._streaming_complete = x
@@ -272,7 +416,7 @@ class GCodeSender:
 
 class CallbackLogHandler(logging.StreamHandler):
     def __init__(self, callback=None):
-        super( CallbackLogHandler, self).__init__()
+        super(CallbackLogHandler, self).__init__()
         self.callback = callback
 
     def emit(self, log):

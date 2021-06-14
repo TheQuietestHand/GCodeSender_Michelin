@@ -1,0 +1,23 @@
+    // Scans for comm ports and puts them in the comm port combo box.
+    private void loadPortSelector() {
+        commPortComboBox.removeAllItems();
+
+        List<CommPortIdentifier> portList = CommUtils.getSerialPortList();
+
+        if (portList.size() < 1) {
+            this.displayErrorDialog("No serial ports found.");
+        } else {
+            // Sort?
+            //java.util.Collections.sort(portList);
+
+            java.util.Iterator<CommPortIdentifier> portIter = portList.iterator();
+
+            while ( portIter.hasNext() )
+            {
+                CommPortIdentifier portIdentifier = portIter.next();
+                commPortComboBox.addItem(portIdentifier.getName());
+            }
+
+            commPortComboBox.setSelectedIndex(0);
+        }
+    }

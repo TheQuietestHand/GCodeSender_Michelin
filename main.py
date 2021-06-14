@@ -1,12 +1,13 @@
-import logging
 import os
 import sys
+import serial
 
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QMainWindow, QFileDialog, QAbstractItemView
 )
 from PyQt5.uic import loadUi
 from pyqt5_plugins.examplebuttonplugin import QtGui
+from serial.tools import list_ports
 
 from components.main_window import Ui_MainWindow
 from components.general_window import Ui_DialogGeneral
@@ -172,6 +173,34 @@ class DialogConnect(QDialog, Ui_DialogConnect):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+        self.connect_signals_slots()
+        self.loadPortSelector()
+
+    def connect_signals_slots(self):
+        self.pushButtonConnect.clicked.connect(self.connectDevice)
+
+    def connectDevice(self):
+        self.GCodeSender.connect(self.comboBoxPortName.currentText(), int(self.comboBoxBaudRate.currentText()))
+        self.close()
+
+    def loadPortSelector(self):
+        self.comboBoxPortName.clear()
+        ports = self.findPorts()
+
+        if len(ports) == 0: return
+
+        for port in ports:
+            self.comboBoxPortName.addItem(port)
+
+    def findPorts(self):
+        all_port_tuples = list_ports.comports()
+        all_ports = set()
+        for ap, _, _ in all_port_tuples:
+            p = os.path.basename(ap)
+            if p.startswith("ttyUSB") or p.startswith("ttyACM"):
+                all_ports |= {ap}
+
+        return all_ports
 
 
 app = QApplication(sys.argv)
