@@ -6,21 +6,30 @@ import sys
 
 
 class Interface:
-    def __init__(self, port, baud=115200):
+    def __init__(self, port, callback, baud=115200):
 
+        self._callback = callback
         self.port = port
         self.baud = baud
         self.queue = None
         self.logger = logging.getLogger("connection_interface")
+        self.logger.setLevel(5)
+        self.logger.propagate = False
 
         self._buf_receive = ""
         self._do_receive = False
+
+    def setup_log_handler(self):
+        lh = CallbackLogHandler()
+        self._longhandler = lh
+        self.logger.addHandler(self._longhandler)
+        self._longhandler.callback = self._callback
 
     def start(self, queue):
 
         self.queue = queue
 
-        self.logger.info("Connecting to %s with baudrate %i", self.port, self.baud)
+        self.logger.info("Connecting to {} with baudrate {}".format(self.port, self.baud))
 
         try:
             self.serialport = serial.Serial(self.port, self.baud, parity=serial.PARITY_NONE,
@@ -33,7 +42,7 @@ class Interface:
             self.logger.info("Connected!")
             self.serial_thread.start()
         except:
-            self.logger.error("Cant connect: ", sys.exc_info()[0])
+            self.logger.error("Cant connect: {}".format(sys.exc_info()[0]))
 
     def stop(self):
 
@@ -56,7 +65,7 @@ class Interface:
             else:
                 self.logger.debug("Nothing to write!")
         except:
-            self.logger.error("Cant write data: ", sys.exc_info()[0])
+            self.logger.error("Cant write data: {}".format(sys.exc_info()[0]))
 
     def _receiving(self):
 
@@ -67,7 +76,7 @@ class Interface:
                 data += self.serialport.read(waiting)
                 self._handle_data(data)
         except:
-            self.logger.error("Cant receive data:", sys.exc_info()[0])
+            self.logger.error("Cant receive data: {}".format(sys.exc_info()[0]))
 
     def _handle_data(self, data):
 
@@ -84,3 +93,13 @@ class Interface:
             if char == "\n":
                 self.queue.put(self._buf_receive.strip())
                 self._buf_receive = ""
+
+
+class CallbackLogHandler(logging.StreamHandler):
+    def __init__(self, callback=None):
+        super(CallbackLogHandler, self).__init__()
+        self.callback = callback
+
+    def emit(self, log):
+        if self.callback:
+            self.callback("Program log", log)

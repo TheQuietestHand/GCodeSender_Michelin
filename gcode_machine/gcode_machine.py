@@ -298,7 +298,7 @@ class GcodeMachine:
         self.current_feed = None
         self.current_motion_mode = 0
         self.current_distance_mode = "G90"
-        self.callback("on_feed_change", self.current_feed)
+        self.callback("Feed change", self.current_feed)
         
     @property
     def position_m(self):
@@ -539,7 +539,7 @@ class GcodeMachine:
             
             if val == None:
                 self.line = ""
-                self.callback("on_var_undefined", key)
+                self.callback("Var undefined", key)
                 return self.line
             else:
                 self.line = self.line.replace("#" + key, str(val))
@@ -564,7 +564,7 @@ class GcodeMachine:
         if self.do_feed_override == False and self.contains_feed:
             # Notify parent app of detected feed in current line (useful for UIs)
             if self.current_feed != self.feed_in_current_line:
-                self.callback("on_feed_change", self.feed_in_current_line)
+                self.callback("Feed change", self.feed_in_current_line)
             self.current_feed = self.feed_in_current_line
             
             
@@ -579,7 +579,7 @@ class GcodeMachine:
                 self.line += "F{:0.1f}".format(self.request_feed)
                 self.current_feed = self.request_feed
                 self.logger.info("OVERRIDING FEED: " + str(self.current_feed))
-                self.callback("on_feed_change", self.current_feed)
+                self.callback("Feed change", self.current_feed)
 
         
 

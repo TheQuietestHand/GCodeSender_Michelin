@@ -182,7 +182,8 @@ class GCodeSender:
 
         if self._interface is None:
             self.logger.info("Launching interface on port {}".format(self._interface_port))
-            self._interface = Interface(self._interface_port, baudrate)
+            self._interface = Interface(self._interface_port, self._callback, baudrate)
+            self._interface.setup_log_handler()
             self._interface.start(self._queue)
         else:
             self.logger.error("Cant launch interface if another is running!")
@@ -237,12 +238,30 @@ class GCodeSender:
         if not self.is_connected():
             return
 
+        self.poll_stop()
+
+        self._interface.stop()
+        self._interface = None
+
+        self.logger.debug("Please wait, joining reading thread.")
+        self._interface_read_do = False
+        self._queue.put("Lubie_zielone_banany_i_niebieskie_pomidory")
+        self._thread_read_interface.join()
+        self.logger.debug("Reading thread successfully joined.")
+
+        self.connected = False
+
+        self._callback("Disconnected")
+
+    def view_settings(self):
+        self._interface_write("$$\n")
+
     def soft_reset(self):
-        self._interface.write("\x18")
+        self._interface_write("\x18")
         self.update_preprocessor_position()
 
     def _preprocessor_callback(self, event, *data):
-        if event == "on_preprocessor_var_undefined":
+        if event == "Var undefined":
             self.logger.critical("Streaming stopped because undefined var founded: {}".format(data[0]))
             self._set_streaming_src_ends(True)
             self.stop_streaming()
@@ -260,8 +279,77 @@ class GCodeSender:
                 elif line == "ok":
                     self._handle_ok()
 
+                elif re.match("^\[G[0123] .*", line):
+                    self._update_gcode_parser_state(line)
+                    self._callback("Read", line)
+
+                elif re.match("^\[...:.*", line):
+                    self._update_hash_state(line)
+                    self._callback("Read", line)
+
+                    if "PRB" in line:
+                        if self.view_hash_state == True:
+                            self._hash_state_sent = False
+                            self.view_hash_state = False
+                            self._callback("Hash state update", self.settings_hash)
+                            self.preprocessor.cs_offsets = self.settings_hash
+                        else:
+                            self._callback("Probe", self.settings_hash["PRB"])
+
+                elif "ALARM" in line:
+                    self.cmode = "Alarm"
+                    self._callback("State update", self.cmode, self.cmpos, self.cwpos)
+                    self._callback("Read", line)
+                    self._callback("Alarm", line)
+
+                elif "error" in line:
+                    self.logger.debug("Error")
+                    self._error = True
+                    self.logger.debug("Rx_buffer_backlog at time of error: {}".format(self._rx_buffer_backlog))
+                    if len(self._rx_buffer_backlog) > 0:
+                        problem_command = self._rx_buffer_backlog[0]
+                        problem_line = self._rx_buffer_backlog_line_number[0]
+                    else:
+                        problem_command = "unknown"
+                        problem_line = -1
+                    self._callback("Error", line, problem_command, problem_line)
+                    self._set_streaming_complete(True)
+                    self._set_streaming_src_ends(True)
+
+                elif "Grbl " in line:
+                    self._callback("Read", line)
+                    self._on_bootup()
+                    self.view_hash_state = True
+                    self.view_settings()
+                    self.view_gcode_parser_state = True
+
+                else:
+                    m = re.match("\$(.*)=(.*) \((.*)\)", line)
+                    if m:
+                        key = int(m.group(1))
+                        val = m.group(2)
+                        comment = m.group(3)
+                        self.settings[key] = {
+                            "val": val,
+                            "cmt": comment
+                        }
+                        self._callback("Read", line)
+                        if key == self._last_setting_number:
+                            self._callback("Settings downloaded", self.settings)
+                    else:
+                        self._callback("Read", line)
+                        self.logger.info("Could not parse settings: {}".format(line))
+
     def update_preprocessor_position(self):
         self.preprocessor.position_m = list(self.cmpos)
+
+    def _update_hash_state(self, line):
+        line = line.replace("]", "").replace("[", "")
+        parts = line.split(":")
+        key = parts[0]
+        tpl_str = parts[1].split(",")
+        tpl = tuple([float(x) for x in tpl_str])
+        self.settings_hash[key] = tpl
 
     def _update_state(self, line):
         match = re.match("<(.*?),MPos:(.*?),WPos:(.*?)>", line)
@@ -295,6 +383,29 @@ class GCodeSender:
         self._last_cmpos = self.cmpos
         self._last_cwpos = self.cwpos
 
+    def _update_gcode_parser_state(self, line):
+        m = re.match(
+            "\[G(\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) M(\d) M(\d) M(\d) T(\d) F([\d.-]*?) S([\d.-]*?)\]", line)
+        if m:
+            self.gps[0] = m.group(1)  # motionmode
+            self.gps[1] = m.group(2)  # current coordinate system
+            self.gps[2] = m.group(3)  # plane
+            self.gps[3] = m.group(4)  # units
+            self.gps[4] = m.group(5)  # dist
+            self.gps[5] = m.group(6)  # feed rate mode
+            self.gps[6] = m.group(7)  # program mode
+            self.gps[7] = m.group(8)  # spindle state
+            self.gps[8] = m.group(9)  # coolant state
+            self.gps[9] = m.group(10)  # tool number
+            self.gps[10] = m.group(11)  # current feed
+            self.gps[11] = m.group(12)  # current rpm
+            self._callback("Gcode parser state update", self.gps)
+
+            self.update_preprocessor_position()
+        else:
+            self.logger.error("Could not parse gcode parser report: '{}'".format(line))
+
+
     def _rx_buffer_fill_pop(self):
         if len(self._rx_buffer_fill) > 0:
             self._rx_buffer_fill.pop(0)
@@ -302,7 +413,7 @@ class GCodeSender:
             ln = self._rx_buffer_backlog_line_number.pop(0) - 1
             self._callback("Processed command", ln, processed_command)
 
-        if self._streaming_src_end_reached is True and len(self._rx_buffer_fill) == 0:
+        if self._streaming_src_ends is True and len(self._rx_buffer_fill) == 0:
             self._set_job_finished(True)
             self._set_streaming_complete(True)
 
@@ -312,6 +423,47 @@ class GCodeSender:
             if not (self._wait_empty_buffer and len(self._rx_buffer_fill) > 0):
                 self._wait_empty_buffer = False
                 self._stream()
+
+    def _on_bootup(self):
+        self._onboot_init()
+        self.connected = True
+        self._callback("Grbl has booted!")
+
+    def _onboot_init(self):
+        del self._rx_buffer_fill[:]
+        del self._rx_buffer_backlog[:]
+        del self._rx_buffer_backlog_line_number[:]
+        self._set_streaming_complete(True)
+        self._set_job_finished(True)
+        self._set_streaming_src_ends(True)
+        self._error = False
+        self._current_line = ""
+        self._current_line_sent = True
+        self._clear_queue()
+        self.is_standstill = False
+        self.preprocessor.reset()
+        self._callback("Progress as a percentage", 0)
+        self._callback("Rx buffer as a percentage", 0)
+
+    def _clear_queue(self):
+        try:
+            junk = self._queue.get_nowait()
+            self.logger.debug("Discarding junk {}".format(junk))
+        except:
+            pass
+
+    def poll_stop(self):
+        if self.is_connected() is False:
+            return
+        if self._thread_polling is not None:
+            self._poll_keep_alive = False
+            self.logger.debug("Please wait, joining polling thread.")
+            self._thread_polling.join()
+            self.logger.debug("Polling thread has successfully joined!")
+        else:
+            self.logger.debug("Cannot start a polling thread. Another one is already running.")
+
+        self._thread_polling = None
 
     def _stream(self):
         if self._streaming_src_ends:

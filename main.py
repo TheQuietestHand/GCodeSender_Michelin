@@ -1,6 +1,7 @@
 import os
 import sys
-import serial
+import serial.tools.list_ports
+import time
 
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QMainWindow, QFileDialog, QAbstractItemView
@@ -31,8 +32,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.listViewCode.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.connect_signals_slots()
-        self.GCodeSender = GCodeSender(self.callback)
-        self.GCodeSender.setup_log_handler()
+        self.sender = GCodeSender(self.callback)
+        self.sender.setup_log_handler()
 
     def connect_signals_slots(self):
         self.actionLoad.triggered.connect(self.load_file)
@@ -41,6 +42,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionFiltering.triggered.connect(self.filtering)
         self.actionDisplay.triggered.connect(self.display)
         self.actionConnect.triggered.connect(self.connect)
+        self.actionDisconnect.triggered.connect(self.disconnect)
+        self.actionSoft_reset.triggered.connect(self.soft_reset)
         self.spinBoxStartFrom.valueChanged.connect(self.set_starting_line)
         self.spinBoxDoTo.valueChanged.connect(self.set_ending_line)
 
@@ -54,27 +57,27 @@ class Window(QMainWindow, Ui_MainWindow):
             initialFilter="Text files (*.txt)|*.txt"
         )
 
-        self.GCodeSender.load_file(response[0])
+        self.sender.load_file(response[0])
 
         counter = 1
-        for command in self.GCodeSender.buffer:
+        for command in self.sender.buffer:
             word = str(counter) + ") " + command
             item = QtGui.QStandardItem(word)
             self.code_model.appendRow(item)
             counter += 1
 
 
-        self.labelCodeLineQty.setNum(self.GCodeSender.buffer_size)
+        self.labelCodeLineQty.setNum(self.sender.buffer_size)
 
         self.spinBoxStartFrom.setEnabled(True)
         self.spinBoxStartFrom.setValue(1)
         self.spinBoxStartFrom.setMinimum(1)
-        self.spinBoxStartFrom.setMaximum(self.GCodeSender.buffer_size)
+        self.spinBoxStartFrom.setMaximum(self.sender.buffer_size)
 
         self.spinBoxDoTo.setEnabled(True)
-        self.spinBoxDoTo.setValue(self.GCodeSender.buffer_size)
+        self.spinBoxDoTo.setValue(self.sender.buffer_size)
         self.spinBoxDoTo.setMinimum(1)
-        self.spinBoxDoTo.setMaximum(self.GCodeSender.buffer_size)
+        self.spinBoxDoTo.setMaximum(self.sender.buffer_size)
 
     def general(self):
         dialog_general = DialogGeneral(self)
@@ -89,20 +92,37 @@ class Window(QMainWindow, Ui_MainWindow):
         dialog_display.exec()
 
     def connect(self):
-        dialog_connect = DialogConnect(self)
+        dialog_connect = DialogConnect(self, self.sender)
         dialog_connect.exec()
+        time.sleep(2)
+        if self.sender.is_connected() is True:
+            self.actionDisconnect.setEnabled(True)
+            self.actionSoft_reset.setEnabled(True)
+            self.actionReset.setEnabled(True)
+            self.actionConnect.setEnabled(False)
+
+    def soft_reset(self):
+        self.sender.soft_reset()
+
+    def disconnect(self):
+        self.sender.disconnect()
+        if self.sender.is_connected() is False:
+            self.actionDisconnect.setDisabled(True)
+            self.actionSoft_reset.setDisabled(True)
+            self.actionReset.setDisabled(True)
+            self.actionConnect.setDisabled(False)
 
     def set_starting_line(self):
-        self.GCodeSender._set_starting_line(self.spinBoxStartFrom.value())
+        self.sender._set_starting_line(self.spinBoxStartFrom.value())
 
     def set_ending_line(self):
-        self.GCodeSender._set_ending_line(self.spinBoxDoTo.value())
+        self.sender._set_ending_line(self.spinBoxDoTo.value())
 
     def callback(self, eventstring, *data):
         args = []
         for d in data:
             args.append(str(d))
-        log = "{} data={}".format(eventstring.ljust(30), ", ".join(args))
+        log = "{}: {}".format(eventstring.ljust(30), ", ".join(args))
         item = QtGui.QStandardItem(log)
         self.logs_model.appendRow(item)
 
@@ -169,41 +189,35 @@ class DialogDisplay(QDialog, Ui_DialogDisplay):
             self.doubleSpinBoxRequestFrequency.setEnabled(False)
 
 
-class DialogConnect(QDialog, Ui_DialogConnect):
-    def __init__(self, parent=None):
+class DialogConnect(QDialog, Ui_DialogConnect, GCodeSender):
+    def __init__(self, parent=None, sender=None):
         super().__init__(parent)
+        self.sender = sender
         self.setupUi(self)
         self.connect_signals_slots()
-        self.loadPortSelector()
+        self.load_port_selector()
 
     def connect_signals_slots(self):
-        self.pushButtonConnect.clicked.connect(self.connectDevice)
+        self.pushButtonConnect.clicked.connect(self.connect_device)
 
-    def connectDevice(self):
-        self.GCodeSender.connect(self.comboBoxPortName.currentText(), int(self.comboBoxBaudRate.currentText()))
+    def connect_device(self):
+        self.sender.connect(self.comboBoxPortName.currentText(), int(self.comboBoxBaudRate.currentText()))
         self.close()
 
-    def loadPortSelector(self):
+    def load_port_selector(self):
         self.comboBoxPortName.clear()
-        ports = self.findPorts()
+        ports = list(serial.tools.list_ports.comports())
 
-        if len(ports) == 0: return
+        if len(ports) == 0:
+            self.comboBoxPortName.addItem('')
+            return
 
         for port in ports:
-            self.comboBoxPortName.addItem(port)
-
-    def findPorts(self):
-        all_port_tuples = list_ports.comports()
-        all_ports = set()
-        for ap, _, _ in all_port_tuples:
-            p = os.path.basename(ap)
-            if p.startswith("ttyUSB") or p.startswith("ttyACM"):
-                all_ports |= {ap}
-
-        return all_ports
+            self.comboBoxPortName.addItem(port.name)
 
 
 app = QApplication(sys.argv)
 win = Window()
 win.show()
 sys.exit(app.exec())
+
