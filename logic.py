@@ -173,42 +173,6 @@ class GCodeSender:
         except:
             return
 
-    def connect(self, port=None, baudrate=115200):
-        if port is None or port.strip() == "":
-            self.logger.error("Cant connect. Variable ""port"" is empty!")
-            return
-        else:
-            self._interface_port = port
-
-        if self._interface is None:
-            self.logger.info("Launching interface on port {}".format(self._interface_port))
-            self._interface = Interface(self._interface_port, self._callback, baudrate)
-            self._interface.setup_log_handler()
-            self._interface.start(self._queue)
-        else:
-            self.logger.error("Cant launch interface if another is running!")
-
-        self._interface_read_do = True
-        self._thread_read_interface = threading.Thread(target=self._on_read)
-        self._thread_read_interface.start()
-
-        self.soft_reset()
-
-    def reset_all_settings(self):
-        del self.buffer[:]
-        self.buffer_size = 0
-        self._current_line_nr = 0
-        self._callback("Line number change", 0)
-        self._callback("Buffer size change", 0)
-        self._set_streaming_complete(True)
-        self.job_finished = True
-        self._set_streaming_src_ends(True)
-        self._error = False
-        self._current_line = ""
-        self._current_line_sent = True
-        self.travel_distance_buffer = {}
-        self.travel_distance_current = {}
-
     def _load_file_into_buffer(self, file):
 
         lines = file.split("\n")
@@ -234,6 +198,27 @@ class GCodeSender:
         self._callback("Buffer size change", self.buffer_size)
         self._callback("Vars change", self.preprocessor.vars)
 
+    def connect(self, port=None, baudrate=115200):
+        if port is None or port.strip() == "":
+            self.logger.error("Cant connect. Variable ""port"" is empty!")
+            return
+        else:
+            self._interface_port = port
+
+        if self._interface is None:
+            self.logger.info("Launching interface on port {}".format(self._interface_port))
+            self._interface = Interface(self._interface_port, self._callback, baudrate)
+            self._interface.setup_log_handler()
+            self._interface.start(self._queue)
+        else:
+            self.logger.error("Cant launch interface if another is running!")
+
+        self._interface_read_do = True
+        self._thread_read_interface = threading.Thread(target=self._on_read)
+        self._thread_read_interface.start()
+
+        self.soft_reset()
+
     def disconnect(self):
         if not self.is_connected():
             return
@@ -253,12 +238,71 @@ class GCodeSender:
 
         self._callback("Disconnected")
 
+    def job_run(self):
+        if self.buffer_size == 0:
+            self.logger.warning("Cant run job. Nothing in the buffer!")
+            return
+
+        self.current_line_number = self._starting_line
+
+        self.travel_distance_current = {}
+
+        self._set_streaming_src_ends(False)
+        self._set_streaming_complete(False)
+        self._streaming_enabled = True
+        self._current_line_sent = True
+        self._set_job_finished(False)
+        self._stream()
+
+    def reset_all_settings(self):
+        del self.buffer[:]
+        self.buffer_size = 0
+        self._current_line_nr = 0
+        self._callback("Line number change", 0)
+        self._callback("Buffer size change", 0)
+        self._set_streaming_complete(True)
+        self.job_finished = True
+        self._set_streaming_src_ends(True)
+        self._error = False
+        self._current_line = ""
+        self._current_line_sent = True
+        self.travel_distance_buffer = {}
+        self.travel_distance_current = {}
+
+    @property
+    def current_line_number(self):
+        return self._current_line_nr
+
+    @current_line_number.setter
+    def current_line_number(self, linenr):
+        if linenr < self.buffer_size:
+            self._current_line_nr = linenr
+            self._callback("Line number change", self._current_line_nr)
+
     def view_settings(self):
-        self._interface_write("$$\n")
+        if self.is_connected() is True:
+            self._interface_write("$$\n")
 
     def soft_reset(self):
-        self._interface_write("\x18")
-        self.update_preprocessor_position()
+        if self.is_connected() is True:
+            self._interface_write("\x18")
+            self.update_preprocessor_position()
+
+    def kill_alarm(self):
+        if self.is_connected() is True:
+            self._interface_write("$X\n")
+
+    def feed_hold(self):
+        if self.is_connected() is True:
+            self._interface_write("!")
+
+    def resume(self):
+        if self.is_connected() is True:
+            self._interface_write("~")
+
+    def homing(self):
+        if self.is_connected() is True:
+            self._interface_write("$H\n")
 
     def _preprocessor_callback(self, event, *data):
         if event == "Var undefined":
@@ -318,7 +362,7 @@ class GCodeSender:
 
                 elif "Grbl " in line:
                     self._callback("Read", line)
-                    self._on_bootup()
+                    self._on_boot_up()
                     self.view_hash_state = True
                     self.view_settings()
                     self.view_gcode_parser_state = True
@@ -387,7 +431,7 @@ class GCodeSender:
         m = re.match(
             "\[G(\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) G(\d\d) M(\d) M(\d) M(\d) T(\d) F([\d.-]*?) S([\d.-]*?)\]", line)
         if m:
-            self.gps[0] = m.group(1)  # motionmode
+            self.gps[0] = m.group(1)  # motion mode
             self.gps[1] = m.group(2)  # current coordinate system
             self.gps[2] = m.group(3)  # plane
             self.gps[3] = m.group(4)  # units
@@ -405,18 +449,6 @@ class GCodeSender:
         else:
             self.logger.error("Could not parse gcode parser report: '{}'".format(line))
 
-
-    def _rx_buffer_fill_pop(self):
-        if len(self._rx_buffer_fill) > 0:
-            self._rx_buffer_fill.pop(0)
-            processed_command = self._rx_buffer_backlog.pop(0)
-            ln = self._rx_buffer_backlog_line_number.pop(0) - 1
-            self._callback("Processed command", ln, processed_command)
-
-        if self._streaming_src_ends is True and len(self._rx_buffer_fill) == 0:
-            self._set_job_finished(True)
-            self._set_streaming_complete(True)
-
     def _handle_ok(self):
         if self._streaming_complete is False:
             self._rx_buffer_fill_pop()
@@ -424,12 +456,12 @@ class GCodeSender:
                 self._wait_empty_buffer = False
                 self._stream()
 
-    def _on_bootup(self):
-        self._onboot_init()
+    def _on_boot_up(self):
+        self._on_boot_init()
         self.connected = True
         self._callback("Grbl has booted!")
 
-    def _onboot_init(self):
+    def _on_boot_init(self):
         del self._rx_buffer_fill[:]
         del self._rx_buffer_backlog[:]
         del self._rx_buffer_backlog_line_number[:]
@@ -452,6 +484,37 @@ class GCodeSender:
         except:
             pass
 
+    def _poll_state(self):
+        while self._poll_keep_alive:
+            self._counter += 1
+
+            if self.view_hash_state:
+                self.get_hash_state()
+                self.view_hash_state = False
+
+            elif self.view_gcode_parser_state:
+                self.get_gcode_parser_state()
+                self.view_gcode_parser_state = False
+
+            else:
+                self._get_state()
+
+            time.sleep(self.poll_interval)
+
+        self.logger.debug("Polling has been stopped")
+
+    def poll_start(self):
+        if self.is_connected() is False:
+            return
+        self._poll_keep_alive = True
+        self._last_cmode = None
+        if self._thread_polling is None:
+            self._thread_polling = threading.Thread(target=self._poll_state)
+            self._thread_polling.start()
+            self.logger.debug("{}: Polling thread started")
+        else:
+            self.logger.debug("Polling thread already running...")
+
     def poll_stop(self):
         if self.is_connected() is False:
             return
@@ -472,6 +535,9 @@ class GCodeSender:
         if self._streaming_enabled is False:
             return
 
+        if self.current_line_number == self._ending_line + 1:
+            return
+
         if self._incremental_streaming:
             self._set_next_line()
             if self._streaming_src_ends is False:
@@ -487,12 +553,24 @@ class GCodeSender:
     def is_connected(self):
         return self.connected
 
+    def _rx_buffer_fill_pop(self):
+        if len(self._rx_buffer_fill) > 0:
+            self._rx_buffer_fill.pop(0)
+            processed_command = self._rx_buffer_backlog.pop(0)
+            ln = self._rx_buffer_backlog_line_number.pop(0) - 1
+            self._callback("Processed command", ln, processed_command)
+
+        if self._streaming_src_ends is True and len(self._rx_buffer_fill) == 0:
+            self._set_job_finished(True)
+            self._set_streaming_complete(True)
+
     def _fill_rx_buffer_until_full(self):
         while True:
             if self._current_line_sent is True:
                 self._set_next_line()
 
-            if self._streaming_src_ends is False and self._rx_buffer_can_receive_current_line():
+            if self._streaming_src_ends is False and self._rx_buffer_can_receive_current_line() and \
+                    self.current_line_number <= self._ending_line:
                 self._send_current_line()
             else:
                 break
@@ -564,6 +642,22 @@ class GCodeSender:
 
     def _set_ending_line(self, x=0):
         self._ending_line = x
+
+    def get_hash_state(self):
+        if self.cmode == "Hold":
+            self.view_hash_state = False
+            self.logger.info("$# command not supported in Hold mode.")
+            return
+
+        if self._hash_state_sent is False:
+            self._interface_write("$#\n")
+            self._hash_state_sent = True
+
+    def get_gcode_parser_state(self):
+        self._interface_write("$G\n")
+
+    def _get_state(self):
+        self._iface.write("?")
 
 
 class CallbackLogHandler(logging.StreamHandler):

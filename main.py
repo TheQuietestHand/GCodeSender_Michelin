@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.uic import loadUi
 from pyqt5_plugins.examplebuttonplugin import QtGui
-from serial.tools import list_ports
 
 from components.main_window import Ui_MainWindow
 from components.general_window import Ui_DialogGeneral
@@ -35,7 +34,17 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender = GCodeSender(self.callback)
         self.sender.setup_log_handler()
 
+        self.is_file_load = False
+
     def connect_signals_slots(self):
+        self.pushButtonRunCode.clicked.connect(self.start_stream_code)
+
+        self.pushButtonPause.clicked.connect(self.feed_hold)
+        self.pushButtonResume.clicked.connect(self.resume)
+        self.pushButtonStop.clicked.connect(self.kill_alarm)
+
+        self.pushButtonHome.clicked.connect(self.homing)
+
         self.actionLoad.triggered.connect(self.load_file)
         self.actionExit.triggered.connect(self.close)
         self.actionGeneral.triggered.connect(self.general)
@@ -44,6 +53,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionConnect.triggered.connect(self.connect)
         self.actionDisconnect.triggered.connect(self.disconnect)
         self.actionSoft_reset.triggered.connect(self.soft_reset)
+
         self.spinBoxStartFrom.valueChanged.connect(self.set_starting_line)
         self.spinBoxDoTo.valueChanged.connect(self.set_ending_line)
 
@@ -66,7 +76,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.code_model.appendRow(item)
             counter += 1
 
-
         self.labelCodeLineQty.setNum(self.sender.buffer_size)
 
         self.spinBoxStartFrom.setEnabled(True)
@@ -78,6 +87,42 @@ class Window(QMainWindow, Ui_MainWindow):
         self.spinBoxDoTo.setValue(self.sender.buffer_size)
         self.spinBoxDoTo.setMinimum(1)
         self.spinBoxDoTo.setMaximum(self.sender.buffer_size)
+
+        self.is_file_load = True
+        self.prepare_to_streaming()
+
+    def feed_hold(self):
+        self.pushButtonPause.setEnabled(False)
+        self.pushButtonResume.setEnabled(True)
+
+        self.sender.feed_hold()
+
+    def resume(self):
+        self.pushButtonPause.setEnabled(True)
+        self.pushButtonResume.setEnabled(False)
+
+        self.sender.resume()
+
+    def kill_alarm(self):
+        self.pushButtonPause.setEnabled(False)
+        self.pushButtonResume.setEnabled(False)
+        self.pushButtonStop.setEnabled(False)
+
+        self.sender.kill_alarm()
+
+    def homing(self):
+        self.sender.homing()
+        if self.pushButtonPause.isEnabled() is False and self.pushButtonPause.isEnabled() is False \
+                and self.pushButtonStop.isEnabled() is False:
+            self.pushButtonResume.setEnabled(True)
+            self.pushButtonStop.setEnabled(True)
+
+    def start_stream_code(self):
+        self.pushButtonPause.setEnabled(True)
+        self.pushButtonStop.setEnabled(True)
+        self.pushButtonRunCode.setEnabled(False)
+
+        self.sender.job_run()
 
     def general(self):
         dialog_general = DialogGeneral(self)
@@ -100,9 +145,30 @@ class Window(QMainWindow, Ui_MainWindow):
             self.actionSoft_reset.setEnabled(True)
             self.actionReset.setEnabled(True)
             self.actionConnect.setEnabled(False)
+            self.prepare_to_streaming()
 
     def soft_reset(self):
         self.sender.soft_reset()
+
+    def prepare_to_streaming(self):
+        if self.is_file_load is False or self.actionDisconnect.isEnabled() is False:
+            return
+
+        self.pushButtonRunCode.setEnabled(True)
+        self.spinBoxPeriod.setEnabled(True)
+
+        self.pushButtonHome.setEnabled(True)
+        self.pushButtonSetZero.setEnabled(True)
+        self.pushButtonZero.setEnabled(True)
+
+        self.pushButtonXManualControlPlus.setEnabled(True)
+        self.pushButtonXManualControlMinus.setEnabled(True)
+        self.pushButtonYManualControlPlus.setEnabled(True)
+        self.pushButtonYManualControlMinus.setEnabled(True)
+        self.pushButtonZManualControlPlus.setEnabled(True)
+        self.pushButtonZManualControlMinus.setEnabled(True)
+        self.doubleSpinBoxStep.setEnabled(True)
+        self.checkBoxG90Step.setEnabled(True)
 
     def disconnect(self):
         self.sender.disconnect()
@@ -111,12 +177,34 @@ class Window(QMainWindow, Ui_MainWindow):
             self.actionSoft_reset.setDisabled(True)
             self.actionReset.setDisabled(True)
             self.actionConnect.setDisabled(False)
+            self.set_buttons_disabled()
 
     def set_starting_line(self):
         self.sender._set_starting_line(self.spinBoxStartFrom.value())
 
     def set_ending_line(self):
         self.sender._set_ending_line(self.spinBoxDoTo.value())
+
+    def set_buttons_disabled(self):
+        self.pushButtonRunCode.setEnabled(False)
+        self.spinBoxPeriod.setEnabled(False)
+
+        self.pushButtonPause.setEnabled(False)
+        self.pushButtonResume.setEnabled(False)
+        self.pushButtonStop.setEnabled(False)
+
+        self.pushButtonHome.setEnabled(False)
+        self.pushButtonSetZero.setEnabled(False)
+        self.pushButtonZero.setEnabled(False)
+
+        self.pushButtonXManualControlPlus.setEnabled(False)
+        self.pushButtonXManualControlMinus.setEnabled(False)
+        self.pushButtonYManualControlPlus.setEnabled(False)
+        self.pushButtonYManualControlMinus.setEnabled(False)
+        self.pushButtonZManualControlPlus.setEnabled(False)
+        self.pushButtonZManualControlMinus.setEnabled(False)
+        self.doubleSpinBoxStep.setEnabled(False)
+        self.checkBoxG90Step.setEnabled(False)
 
     def callback(self, eventstring, *data):
         args = []
@@ -220,4 +308,3 @@ app = QApplication(sys.argv)
 win = Window()
 win.show()
 sys.exit(app.exec())
-
