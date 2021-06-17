@@ -76,6 +76,7 @@ class GCodeSender:
         # Set 'True' to get callback with the hash settings
         self.view_hash_state = False
 
+        # Initializing logger
         self.logger = logging.getLogger("GCodeSender")
         self.logger.setLevel(5)
         self.logger.propagate = False
@@ -94,9 +95,10 @@ class GCodeSender:
         # The currently travelled distance.
         self.travel_distance_current = {}
 
-        # "True" if the machine is moving
-        self.is_moving = False
+        # "True" if the machine is standstill
+        self.is_standstill = False
 
+        # Var for checking if the machine is standstill
         self._standstill_watchdog_increment = 0
 
         # Name of serial port to connect
@@ -153,6 +155,53 @@ class GCodeSender:
         self.preprocessor.cs_offsets = self.settings_hash
         self._callback("Gcode parser state update", self.gps)
 
+    @property
+    def current_line_number(self):
+        return self._current_line_nr
+
+    @current_line_number.setter
+    def current_line_number(self, linenr):
+        if linenr < self.buffer_size:
+            self._current_line_nr = linenr
+            self._callback("Line number change", self._current_line_nr)
+
+    @property
+    def starting_line(self):
+        return self._starting_line
+
+    @starting_line.setter
+    def starting_line(self, line):
+        if line < 1:
+            self._starting_line = 1
+        elif line > self.ending_line:
+            self._starting_line = self.ending_line
+        else:
+            self._starting_line = line
+
+    @property
+    def ending_line(self):
+        return self._ending_line
+
+    @ending_line.setter
+    def ending_line(self, line):
+        if line > self.buffer_size:
+            self._ending_line = self.buffer_size
+        elif line < self.starting_line:
+            self._ending_line = self.starting_line
+        else:
+            self._ending_line = line
+
+    @property
+    def incremental_streaming(self):
+        return self._incremental_streaming
+
+    @incremental_streaming.setter
+    def incremental_streaming(self, onoff):
+        self._incremental_streaming = onoff
+        if self._incremental_streaming:
+            self._wait_empty_buffer = True
+        self.logger.debug("Incremental streaming set to {}".format(self._incremental_streaming))
+
     def setup_log_handler(self):
         lh = CallbackLogHandler()
         self._longhandler = lh
@@ -171,7 +220,7 @@ class GCodeSender:
             with open(filepath) as file:
                 self._load_file_into_buffer(file.read())
         except:
-            return
+            pass
 
     def _load_file_into_buffer(self, file):
 
@@ -269,16 +318,6 @@ class GCodeSender:
         self.travel_distance_buffer = {}
         self.travel_distance_current = {}
 
-    @property
-    def current_line_number(self):
-        return self._current_line_nr
-
-    @current_line_number.setter
-    def current_line_number(self, linenr):
-        if linenr < self.buffer_size:
-            self._current_line_nr = linenr
-            self._callback("Line number change", self._current_line_nr)
-
     def view_settings(self):
         if self.is_connected() is True:
             self._interface_write("$$\n")
@@ -332,7 +371,7 @@ class GCodeSender:
                     self._callback("Read", line)
 
                     if "PRB" in line:
-                        if self.view_hash_state == True:
+                        if self.view_hash_state:
                             self._hash_state_sent = False
                             self.view_hash_state = False
                             self._callback("Hash state update", self.settings_hash)
@@ -412,15 +451,15 @@ class GCodeSender:
                 self.gcode_parser_state_requested = True
 
         if self.cmpos != self._last_cmpos:
-            if self.is_moving is False:
+            if self.is_standstill is True:
                 self._standstill_watchdog_increment = 0
-                self.is_moving = True
+                self.is_standstill = False
                 self._callback("Movement")
         else:
             self._standstill_watchdog_increment += 1
 
-        if self.is_moving is True and self._standstill_watchdog_increment > 10:
-            self.is_moving = False
+        if self.is_standstill is False and self._standstill_watchdog_increment > 10:
+            self.is_standstill = True
             self._callback("Standstill")
 
         self._last_cmode = self.cmode
@@ -628,6 +667,12 @@ class GCodeSender:
         else:
             self._set_streaming_src_ends(True)
 
+    def override_feed(self, feed):
+        self.preprocessor.request_feed = float(feed)
+
+    def set_feed_override(self, x):
+        self.preprocessor.do_feed_override = x
+
     def _set_job_finished(self, x):
         self.job_finished = x
 
@@ -636,12 +681,6 @@ class GCodeSender:
 
     def _set_streaming_src_ends(self, x):
         self._streaming_src_ends = x
-
-    def _set_starting_line(self, x=0):
-        self._starting_line = x
-
-    def _set_ending_line(self, x=0):
-        self._ending_line = x
 
     def get_hash_state(self):
         if self.cmode == "Hold":
@@ -657,7 +696,7 @@ class GCodeSender:
         self._interface_write("$G\n")
 
     def _get_state(self):
-        self._iface.write("?")
+        self._interface.write("?")
 
 
 class CallbackLogHandler(logging.StreamHandler):

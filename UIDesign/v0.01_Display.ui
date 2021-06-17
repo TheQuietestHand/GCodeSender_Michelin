@@ -10,19 +10,19 @@
     <x>0</x>
     <y>0</y>
     <width>295</width>
-    <height>132</height>
+    <height>95</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>295</width>
-    <height>132</height>
+    <height>95</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>295</width>
-    <height>132</height>
+    <height>95</height>
    </size>
   </property>
   <property name="baseSize">
@@ -40,55 +40,11 @@
      <x>10</x>
      <y>6</y>
      <width>276</width>
-     <height>117</height>
+     <height>81</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0" colspan="2">
-     <widget class="QCheckBox" name="checkBoxEnablePositionRequest">
-      <property name="text">
-       <string>Enable position request and report</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0" colspan="2">
-     <widget class="QRadioButton" name="radioButtonAlwaysRequest">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string>Always request</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0" colspan="2">
-     <widget class="QRadioButton" name="radioButtonAlwaysWithoutIDLE">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string>Always request without IDLE Check</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0" colspan="2">
-     <widget class="QRadioButton" name="radioButtonNotDuringManual">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string>Not during manual control</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>Request frequency (s):</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="1">
+    <item row="1" column="1">
      <widget class="QDoubleSpinBox" name="doubleSpinBoxRequestFrequency">
       <property name="enabled">
        <bool>false</bool>
@@ -97,23 +53,37 @@
        <bool>false</bool>
       </property>
       <property name="minimum">
-       <double>0.500000000000000</double>
+       <double>0.000000000000000</double>
       </property>
       <property name="maximum">
        <double>10.000000000000000</double>
       </property>
       <property name="singleStep">
-       <double>0.500000000000000</double>
+       <double>0.100000000000000</double>
       </property>
       <property name="value">
-       <double>5.000000000000000</double>
+       <double>0.200000000000000</double>
       </property>
      </widget>
     </item>
-    <item row="4" column="2">
+    <item row="1" column="2">
      <widget class="QPushButton" name="pushButtonOk">
       <property name="text">
        <string>Ok</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="2">
+     <widget class="QCheckBox" name="checkBoxEnablePositionRequest">
+      <property name="text">
+       <string>Enable position request and report</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Request frequency (s):</string>
       </property>
      </widget>
     </item>

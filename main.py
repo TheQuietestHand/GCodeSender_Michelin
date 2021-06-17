@@ -35,6 +35,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.setup_log_handler()
 
         self.is_file_load = False
+        self.is_polling_on = False
 
     def connect_signals_slots(self):
         self.pushButtonRunCode.clicked.connect(self.start_stream_code)
@@ -133,8 +134,9 @@ class Window(QMainWindow, Ui_MainWindow):
         dialog_filtering.exec()
 
     def display(self):
-        dialog_display = DialogDisplay(self)
+        dialog_display = DialogDisplay(self, self.sender, self.is_polling_on)
         dialog_display.exec()
+        self.is_polling_on = dialog_display.is_polling_on
 
     def connect(self):
         dialog_connect = DialogConnect(self, self.sender)
@@ -170,6 +172,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.doubleSpinBoxStep.setEnabled(True)
         self.checkBoxG90Step.setEnabled(True)
 
+        if self.is_polling_on is True:
+            self.sender.poll_start()
+
     def disconnect(self):
         self.sender.disconnect()
         if self.sender.is_connected() is False:
@@ -180,10 +185,12 @@ class Window(QMainWindow, Ui_MainWindow):
             self.set_buttons_disabled()
 
     def set_starting_line(self):
-        self.sender._set_starting_line(self.spinBoxStartFrom.value())
+        self.sender.starting_line(self.spinBoxStartFrom.value())
+        self.spinBoxDoTo.setMinimum(self.spinBoxStartFrom.value())
 
     def set_ending_line(self):
-        self.sender._set_ending_line(self.spinBoxDoTo.value())
+        self.sender.ending_line(self.spinBoxDoTo.value())
+        self.spinBoxStartFrom.setMaximum(self.spinBoxDoTo.value())
 
     def set_buttons_disabled(self):
         self.pushButtonRunCode.setEnabled(False)
@@ -256,25 +263,33 @@ class DialogFiltering(QDialog, Ui_DialogFiltering):
 
 
 class DialogDisplay(QDialog, Ui_DialogDisplay):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, sender=None, is_polling_on=False):
         super().__init__(parent)
+        self.sender = sender
+        self.is_polling_on = is_polling_on
         self.setupUi(self)
+
+        self.checkBoxEnablePositionRequest.setChecked(self.is_polling_on)
+        self.doubleSpinBoxRequestFrequency.setEnabled(self.is_polling_on)
+
         self.connect_signals_slots()
 
     def connect_signals_slots(self):
         self.checkBoxEnablePositionRequest.stateChanged.connect(self.enable_position_request)
+        self.doubleSpinBoxRequestFrequency.valueChanged.connect(self.poll_interval_change)
 
     def enable_position_request(self):
         if self.checkBoxEnablePositionRequest.isChecked():
-            self.radioButtonAlwaysRequest.setEnabled(True)
-            self.radioButtonAlwaysWithoutIDLE.setEnabled(True)
-            self.radioButtonNotDuringManual.setEnabled(True)
             self.doubleSpinBoxRequestFrequency.setEnabled(True)
+            self.sender.poll_start()
+            self.is_polling_on = True
         else:
-            self.radioButtonAlwaysRequest.setEnabled(False)
-            self.radioButtonAlwaysWithoutIDLE.setEnabled(False)
-            self.radioButtonNotDuringManual.setEnabled(False)
             self.doubleSpinBoxRequestFrequency.setEnabled(False)
+            self.sender.poll_stop()
+            self.is_polling_on = False
+
+    def poll_interval_change(self):
+        self.sender.poll_interval = self.doubleSpinBoxRequestFrequency.value()
 
 
 class DialogConnect(QDialog, Ui_DialogConnect, GCodeSender):

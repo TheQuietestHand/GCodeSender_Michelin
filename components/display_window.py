@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'UIDesign/v0.01_Display.ui'
+# Form implementation generated from reading ui file 'UIDesign/V0.01_Display.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -15,46 +15,34 @@ class Ui_DialogDisplay(object):
     def setupUi(self, DialogDisplay):
         DialogDisplay.setObjectName("DialogDisplay")
         DialogDisplay.setEnabled(True)
-        DialogDisplay.resize(295, 132)
-        DialogDisplay.setMinimumSize(QtCore.QSize(295, 132))
-        DialogDisplay.setMaximumSize(QtCore.QSize(295, 132))
+        DialogDisplay.resize(295, 95)
+        DialogDisplay.setMinimumSize(QtCore.QSize(295, 95))
+        DialogDisplay.setMaximumSize(QtCore.QSize(295, 95))
         DialogDisplay.setBaseSize(QtCore.QSize(250, 120))
         self.layoutWidget = QtWidgets.QWidget(DialogDisplay)
-        self.layoutWidget.setGeometry(QtCore.QRect(10, 6, 276, 117))
+        self.layoutWidget.setGeometry(QtCore.QRect(10, 6, 276, 81))
         self.layoutWidget.setObjectName("layoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.layoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
-        self.checkBoxEnablePositionRequest = QtWidgets.QCheckBox(self.layoutWidget)
-        self.checkBoxEnablePositionRequest.setObjectName("checkBoxEnablePositionRequest")
-        self.gridLayout.addWidget(self.checkBoxEnablePositionRequest, 0, 0, 1, 2)
-        self.radioButtonAlwaysRequest = QtWidgets.QRadioButton(self.layoutWidget)
-        self.radioButtonAlwaysRequest.setEnabled(False)
-        self.radioButtonAlwaysRequest.setObjectName("radioButtonAlwaysRequest")
-        self.gridLayout.addWidget(self.radioButtonAlwaysRequest, 1, 0, 1, 2)
-        self.radioButtonAlwaysWithoutIDLE = QtWidgets.QRadioButton(self.layoutWidget)
-        self.radioButtonAlwaysWithoutIDLE.setEnabled(False)
-        self.radioButtonAlwaysWithoutIDLE.setObjectName("radioButtonAlwaysWithoutIDLE")
-        self.gridLayout.addWidget(self.radioButtonAlwaysWithoutIDLE, 2, 0, 1, 2)
-        self.radioButtonNotDuringManual = QtWidgets.QRadioButton(self.layoutWidget)
-        self.radioButtonNotDuringManual.setEnabled(False)
-        self.radioButtonNotDuringManual.setObjectName("radioButtonNotDuringManual")
-        self.gridLayout.addWidget(self.radioButtonNotDuringManual, 3, 0, 1, 2)
-        self.label = QtWidgets.QLabel(self.layoutWidget)
-        self.label.setObjectName("label")
-        self.gridLayout.addWidget(self.label, 4, 0, 1, 1)
         self.doubleSpinBoxRequestFrequency = QtWidgets.QDoubleSpinBox(self.layoutWidget)
         self.doubleSpinBoxRequestFrequency.setEnabled(False)
         self.doubleSpinBoxRequestFrequency.setFrame(False)
-        self.doubleSpinBoxRequestFrequency.setMinimum(0.5)
+        self.doubleSpinBoxRequestFrequency.setMinimum(0.0)
         self.doubleSpinBoxRequestFrequency.setMaximum(10.0)
-        self.doubleSpinBoxRequestFrequency.setSingleStep(0.5)
-        self.doubleSpinBoxRequestFrequency.setProperty("value", 5.0)
+        self.doubleSpinBoxRequestFrequency.setSingleStep(0.1)
+        self.doubleSpinBoxRequestFrequency.setProperty("value", 0.2)
         self.doubleSpinBoxRequestFrequency.setObjectName("doubleSpinBoxRequestFrequency")
-        self.gridLayout.addWidget(self.doubleSpinBoxRequestFrequency, 4, 1, 1, 1)
+        self.gridLayout.addWidget(self.doubleSpinBoxRequestFrequency, 1, 1, 1, 1)
         self.pushButtonOk = QtWidgets.QPushButton(self.layoutWidget)
         self.pushButtonOk.setObjectName("pushButtonOk")
-        self.gridLayout.addWidget(self.pushButtonOk, 4, 2, 1, 1)
+        self.gridLayout.addWidget(self.pushButtonOk, 1, 2, 1, 1)
+        self.checkBoxEnablePositionRequest = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBoxEnablePositionRequest.setObjectName("checkBoxEnablePositionRequest")
+        self.gridLayout.addWidget(self.checkBoxEnablePositionRequest, 0, 0, 1, 2)
+        self.label = QtWidgets.QLabel(self.layoutWidget)
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 1, 0, 1, 1)
 
         self.retranslateUi(DialogDisplay)
         self.pushButtonOk.clicked.connect(DialogDisplay.accept)
@@ -63,19 +51,6 @@ class Ui_DialogDisplay(object):
     def retranslateUi(self, DialogDisplay):
         _translate = QtCore.QCoreApplication.translate
         DialogDisplay.setWindowTitle(_translate("DialogDisplay", "Display"))
-        self.checkBoxEnablePositionRequest.setText(_translate("DialogDisplay", "Enable position request and report"))
-        self.radioButtonAlwaysRequest.setText(_translate("DialogDisplay", "Always request"))
-        self.radioButtonAlwaysWithoutIDLE.setText(_translate("DialogDisplay", "Always request without IDLE Check"))
-        self.radioButtonNotDuringManual.setText(_translate("DialogDisplay", "Not during manual control"))
-        self.label.setText(_translate("DialogDisplay", "Request frequency (s):"))
         self.pushButtonOk.setText(_translate("DialogDisplay", "Ok"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    DialogDisplay = QtWidgets.QDialog()
-    ui = Ui_DialogDisplay()
-    ui.setupUi(DialogDisplay)
-    DialogDisplay.show()
-    sys.exit(app.exec_())
+        self.checkBoxEnablePositionRequest.setText(_translate("DialogDisplay", "Enable position request and report"))
+        self.label.setText(_translate("DialogDisplay", "Request frequency (s):"))
