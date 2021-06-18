@@ -36,16 +36,12 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.is_file_load = False
         self.is_polling_on = False
+        self.is_incremental_streaming = True
+
+        self.last_distance_mode = None
 
     def connect_signals_slots(self):
-        self.pushButtonRunCode.clicked.connect(self.start_stream_code)
-
-        self.pushButtonPause.clicked.connect(self.feed_hold)
-        self.pushButtonResume.clicked.connect(self.resume)
-        self.pushButtonStop.clicked.connect(self.kill_alarm)
-
-        self.pushButtonHome.clicked.connect(self.homing)
-
+        # Menu bar
         self.actionLoad.triggered.connect(self.load_file)
         self.actionExit.triggered.connect(self.close)
         self.actionGeneral.triggered.connect(self.general)
@@ -55,6 +51,26 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionDisconnect.triggered.connect(self.disconnect)
         self.actionSoft_reset.triggered.connect(self.soft_reset)
 
+        # State
+        self.pushButtonPause.clicked.connect(self.feed_hold)
+        self.pushButtonResume.clicked.connect(self.resume)
+        self.pushButtonStop.clicked.connect(self.kill_alarm)
+
+        # XYZ Motion
+        self.pushButtonHome.clicked.connect(self.homing)
+
+        # Manual control
+        self.pushButtonXManualControlPlus.clicked.connect(self.manual_X_plus)
+        self.pushButtonXManualControlMinus.clicked.connect(self.manual_X_minus)
+
+        self.pushButtonYManualControlPlus.clicked.connect(self.manual_Y_plus)
+        self.pushButtonYManualControlMinus.clicked.connect(self.manual_Y_minus)
+
+        self.pushButtonZManualControlPlus.clicked.connect(self.manual_Z_plus)
+        self.pushButtonZManualControlMinus.clicked.connect(self.manual_Z_minus)
+
+        # Code
+        self.pushButtonRunCode.clicked.connect(self.start_stream_code)
         self.spinBoxStartFrom.valueChanged.connect(self.set_starting_line)
         self.spinBoxDoTo.valueChanged.connect(self.set_ending_line)
 
@@ -92,6 +108,54 @@ class Window(QMainWindow, Ui_MainWindow):
         self.is_file_load = True
         self.prepare_to_streaming()
 
+    def manual_X_plus(self):
+        if self.last_distance_mode == "G91":
+            self.sender.send_immediately("X" + str(self.doubleSpinBoxStep.value()))
+        else:
+            self.sender.send_immediately("G91 X" + str(self.doubleSpinBoxStep.value()))
+
+        self.sender.send_immediately("G90")
+
+    def manual_X_minus(self):
+        if self.last_distance_mode == "G91":
+            self.sender.send_immediately("X-" + str(self.doubleSpinBoxStep.value()))
+        else:
+            self.sender.send_immediately("G91 X-" + str(self.doubleSpinBoxStep.value()))
+
+        self.sender.send_immediately("G90")
+
+    def manual_Y_plus(self):
+        if self.last_distance_mode == "G91":
+            self.sender.send_immediately("Y" + str(self.doubleSpinBoxStep.value()))
+        else:
+            self.sender.send_immediately("G91 Y" + str(self.doubleSpinBoxStep.value()))
+
+        self.sender.send_immediately("G90")
+
+    def manual_Y_minus(self):
+        if self.last_distance_mode == "G91":
+            self.sender.send_immediately("Y-" + str(self.doubleSpinBoxStep.value()))
+        else:
+            self.sender.send_immediately("G91 Y-" + str(self.doubleSpinBoxStep.value()))
+
+        self.sender.send_immediately("G90")
+
+    def manual_Z_plus(self):
+        if self.last_distance_mode == "G91":
+            self.sender.send_immediately("Z" + str(self.doubleSpinBoxStep.value()))
+        else:
+            self.sender.send_immediately("G91 Z" + str(self.doubleSpinBoxStep.value()))
+
+        self.sender.send_immediately("G90")
+
+    def manual_Z_minus(self):
+        if self.last_distance_mode == "G91":
+            self.sender.send_immediately("Z-" + str(self.doubleSpinBoxStep.value()))
+        else:
+            self.sender.send_immediately("G91 Z-" + str(self.doubleSpinBoxStep.value()))
+
+        self.sender.send_immediately("G90")
+
     def feed_hold(self):
         self.pushButtonPause.setEnabled(False)
         self.pushButtonResume.setEnabled(True)
@@ -126,7 +190,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.job_run()
 
     def general(self):
-        dialog_general = DialogGeneral(self)
+        dialog_general = DialogGeneral(self, self.sender, self.is_incremental_streaming)
         dialog_general.exec()
 
     def filtering(self):
@@ -138,26 +202,13 @@ class Window(QMainWindow, Ui_MainWindow):
         dialog_display.exec()
         self.is_polling_on = dialog_display.is_polling_on
 
-    def connect(self):
-        dialog_connect = DialogConnect(self, self.sender)
-        dialog_connect.exec()
-        time.sleep(2)
-        if self.sender.is_connected() is True:
-            self.actionDisconnect.setEnabled(True)
-            self.actionSoft_reset.setEnabled(True)
-            self.actionReset.setEnabled(True)
-            self.actionConnect.setEnabled(False)
-            self.prepare_to_streaming()
-
     def soft_reset(self):
         self.sender.soft_reset()
 
     def prepare_to_streaming(self):
-        if self.is_file_load is False or self.actionDisconnect.isEnabled() is False:
-            return
-
-        self.pushButtonRunCode.setEnabled(True)
-        self.spinBoxPeriod.setEnabled(True)
+        if self.is_file_load is True and self.actionDisconnect.isEnabled() is True:
+            self.pushButtonRunCode.setEnabled(True)
+            self.spinBoxPeriod.setEnabled(True)
 
         self.pushButtonHome.setEnabled(True)
         self.pushButtonSetZero.setEnabled(True)
@@ -175,6 +226,19 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.is_polling_on is True:
             self.sender.poll_start()
 
+    def connect(self):
+        dialog_connect = DialogConnect(self, self.sender)
+        dialog_connect.exec()
+        time.sleep(2)
+        if self.sender.is_connected() is True:
+            self.actionDisconnect.setEnabled(True)
+            self.actionSoft_reset.setEnabled(True)
+            self.actionReset.setEnabled(True)
+            self.actionConnect.setEnabled(False)
+            self.prepare_to_streaming()
+
+        self.sender.incremental_streaming = self.is_incremental_streaming
+
     def disconnect(self):
         self.sender.disconnect()
         if self.sender.is_connected() is False:
@@ -184,12 +248,14 @@ class Window(QMainWindow, Ui_MainWindow):
             self.actionConnect.setDisabled(False)
             self.set_buttons_disabled()
 
+        self.labelLastStateVar.setText("NaN")
+
     def set_starting_line(self):
-        self.sender.starting_line(self.spinBoxStartFrom.value())
+        self.sender.starting_line = self.spinBoxStartFrom.value()
         self.spinBoxDoTo.setMinimum(self.spinBoxStartFrom.value())
 
     def set_ending_line(self):
-        self.sender.ending_line(self.spinBoxDoTo.value())
+        self.sender.ending_line = self.spinBoxDoTo.value()
         self.spinBoxStartFrom.setMaximum(self.spinBoxDoTo.value())
 
     def set_buttons_disabled(self):
@@ -217,19 +283,39 @@ class Window(QMainWindow, Ui_MainWindow):
         args = []
         for d in data:
             args.append(str(d))
+
+        if eventstring == "Gcode parser state update":
+            self.last_distance_mode = d[4]
+
+        if eventstring == "Writing":
+            if "G90" in d:
+                self.last_distance_mode = "G90"
+            elif "G91" in d:
+                self.last_distance_mode = "G91"
+
+        if eventstring == "State update":
+            self.labelLastStateVar.setText(args[0])
+
         log = "{}: {}".format(eventstring.ljust(30), ", ".join(args))
         item = QtGui.QStandardItem(log)
         self.logs_model.appendRow(item)
 
 
 class DialogGeneral(QDialog, Ui_DialogGeneral):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, sender=None, is_incremental_streaming=True):
         super().__init__(parent)
         self.setupUi(self)
+        self.is_incremental_streaming = is_incremental_streaming
+        self.sender = sender
+        if self.is_incremental_streaming:
+            self.checkBoxAgresivePreload.setChecked(False)
+        else:
+            self.checkBoxAgresivePreload.setChecked(True)
         self.connect_signals_slots()
 
     def connect_signals_slots(self):
         self.checkBoxCalculate.stateChanged.connect(self.calculate_feed)
+        self.pushButtonOk.clicked.connect(self.closing_dialog)
 
     def calculate_feed(self):
         if self.checkBoxCalculate.isChecked():
@@ -242,6 +328,14 @@ class DialogGeneral(QDialog, Ui_DialogGeneral):
             self.spinBoxSurfaceSpeed.setEnabled(False)
             self.doubleSpinBoxToothLoad.setEnabled(False)
             self.spinBoxNumberOfTeeth.setEnabled(False)
+
+    def closing_dialog(self):
+        if self.checkBoxAgresivePreload.isChecked():
+            self.is_incremental_streaming = False
+        else:
+            self.is_incremental_streaming = True
+
+        self.sender.incremental_streaming = self.is_incremental_streaming
 
 
 class DialogFiltering(QDialog, Ui_DialogFiltering):
@@ -275,10 +369,10 @@ class DialogDisplay(QDialog, Ui_DialogDisplay):
         self.connect_signals_slots()
 
     def connect_signals_slots(self):
-        self.checkBoxEnablePositionRequest.stateChanged.connect(self.enable_position_request)
-        self.doubleSpinBoxRequestFrequency.valueChanged.connect(self.poll_interval_change)
+        self.pushButtonOk.clicked.connect(self.closing_dialog)
+        self.checkBoxEnablePositionRequest.clicked.connect(self.onof_spin_box)
 
-    def enable_position_request(self):
+    def closing_dialog(self):
         if self.checkBoxEnablePositionRequest.isChecked():
             self.doubleSpinBoxRequestFrequency.setEnabled(True)
             self.sender.poll_start()
@@ -288,8 +382,10 @@ class DialogDisplay(QDialog, Ui_DialogDisplay):
             self.sender.poll_stop()
             self.is_polling_on = False
 
-    def poll_interval_change(self):
         self.sender.poll_interval = self.doubleSpinBoxRequestFrequency.value()
+
+    def onof_spin_box(self):
+        self.doubleSpinBoxRequestFrequency.setEnabled(self.checkBoxEnablePositionRequest.isChecked())
 
 
 class DialogConnect(QDialog, Ui_DialogConnect, GCodeSender):

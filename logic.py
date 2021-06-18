@@ -122,7 +122,7 @@ class GCodeSender:
         self._streaming_src_ends = True
         self._streaming_enabled = False
         self._error = False
-        self._incremental_streaming = False
+        self._incremental_streaming = True
         self._hash_state_sent = False
 
         self.buffer = []
@@ -342,6 +342,32 @@ class GCodeSender:
     def homing(self):
         if self.is_connected() is True:
             self._interface_write("$H\n")
+
+    def send_immediately(self, line):
+        bytes_in_firmware_buffer = sum(self._rx_buffer_fill)
+        if bytes_in_firmware_buffer > 0:
+            self.logger.error("Firmware buffer has {:d} unprocessed bytes in it. Will not send: {}".format(bytes_in_firmware_buffer, line))
+            return
+
+        if self.cmode == "Alarm":
+            self.logger.error("Grbl is in ALARM state. Will not send: {}".format(line))
+            return
+
+        if self.cmode == "Hold":
+            self.logger.error("Grbl is in HOLD state. Will not send: {}".format(line))
+            return
+
+        if "$#" in line:
+            self.view_hash_state = True
+            return
+
+        self.preprocessor.set_line(line)
+        self.preprocessor.strip()
+        self.preprocessor.tidy()
+        self.preprocessor.parse_state()
+        self.preprocessor.override_feed()
+
+        self._interface_write(self.preprocessor.line + "\n")
 
     def _preprocessor_callback(self, event, *data):
         if event == "Var undefined":
@@ -574,7 +600,7 @@ class GCodeSender:
         if self._streaming_enabled is False:
             return
 
-        if self.current_line_number == self._ending_line + 1:
+        if self.current_line_number == self._ending_line:
             return
 
         if self._incremental_streaming:

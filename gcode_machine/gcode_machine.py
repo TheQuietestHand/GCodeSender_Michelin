@@ -139,16 +139,16 @@ class GcodeMachine:
         ## @var target_m
         # Contains the position target of the currently set command in
         # the machine coordinate system.
-        self.target_m = [None, None, None]
+        self.target_m = [0.0, 0.0, 0.0]
         
         ## @var target_m
         # Contains the position target of the currently set command in
         # the currently seleted coordinate system.
-        self.target_w = [None, None, None]
+        self.target_w = [0.0, 0.0, 0.0]
         
         ## @var offset
         # Contains the offset of the arc center from current position
-        self.offset = [0, 0, 0] 
+        self.offset = [0, 0, 0]
         
         ## @var radius
         # Contains the radius of the current arc
@@ -497,7 +497,7 @@ class GcodeMachine:
         # move the 'tool'
         for i in range(0, 3):
             # loop over X, Y, Z axes
-            if self.target_m[i] != None: # keep state
+            if self.target_m[i] != 0: # keep state
                 self.pos_m[i] = self.target_m[i]
                 self.pos_w[i] = self.target_w[i]
                 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'UIDesign/V0.01_Main.ui'
+# Form implementation generated from reading ui file 'UIDesign/v0.01_Main.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -353,7 +353,7 @@ class Ui_MainWindow(object):
         self.doubleSpinBoxStep = QtWidgets.QDoubleSpinBox(self.groupBoxManualControl)
         self.doubleSpinBoxStep.setEnabled(False)
         self.doubleSpinBoxStep.setAccelerated(True)
-        self.doubleSpinBoxStep.setSingleStep(0.01)
+        self.doubleSpinBoxStep.setSingleStep(0.1)
         self.doubleSpinBoxStep.setProperty("value", 1.0)
         self.doubleSpinBoxStep.setObjectName("doubleSpinBoxStep")
         self.gridLayout_9.addWidget(self.doubleSpinBoxStep, 1, 3, 1, 1)
