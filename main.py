@@ -2,6 +2,7 @@ import os
 import sys
 import serial.tools.list_ports
 import time
+import threading
 
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QMainWindow, QFileDialog, QAbstractItemView
@@ -37,6 +38,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.is_file_load = False
         self.is_polling_on = False
         self.is_incremental_streaming = True
+
+        self.thread_run_time = threading.Thread(target=self._run_time)
+        self.run_time_sec = -1
 
         self.last_distance_mode = None
 
@@ -108,65 +112,68 @@ class Window(QMainWindow, Ui_MainWindow):
         self.is_file_load = True
         self.prepare_to_streaming()
 
+    def _run_time(self):
+        while self.labelLastStateVar.text() == "Run":
+            self.run_time_sec += 1
+            self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
+            time.sleep(1)
+
     def manual_X_plus(self):
         if self.last_distance_mode == "G91":
             self.sender.send_immediately("X" + str(self.doubleSpinBoxStep.value()))
         else:
             self.sender.send_immediately("G91 X" + str(self.doubleSpinBoxStep.value()))
-
-        self.sender.send_immediately("G90")
+            self.sender.send_immediately("G90")
 
     def manual_X_minus(self):
         if self.last_distance_mode == "G91":
             self.sender.send_immediately("X-" + str(self.doubleSpinBoxStep.value()))
         else:
             self.sender.send_immediately("G91 X-" + str(self.doubleSpinBoxStep.value()))
-
-        self.sender.send_immediately("G90")
+            self.sender.send_immediately("G90")
 
     def manual_Y_plus(self):
         if self.last_distance_mode == "G91":
             self.sender.send_immediately("Y" + str(self.doubleSpinBoxStep.value()))
         else:
             self.sender.send_immediately("G91 Y" + str(self.doubleSpinBoxStep.value()))
-
-        self.sender.send_immediately("G90")
+            self.sender.send_immediately("G90")
 
     def manual_Y_minus(self):
         if self.last_distance_mode == "G91":
             self.sender.send_immediately("Y-" + str(self.doubleSpinBoxStep.value()))
         else:
             self.sender.send_immediately("G91 Y-" + str(self.doubleSpinBoxStep.value()))
-
-        self.sender.send_immediately("G90")
+            self.sender.send_immediately("G90")
 
     def manual_Z_plus(self):
         if self.last_distance_mode == "G91":
             self.sender.send_immediately("Z" + str(self.doubleSpinBoxStep.value()))
         else:
             self.sender.send_immediately("G91 Z" + str(self.doubleSpinBoxStep.value()))
-
-        self.sender.send_immediately("G90")
+            self.sender.send_immediately("G90")
 
     def manual_Z_minus(self):
         if self.last_distance_mode == "G91":
             self.sender.send_immediately("Z-" + str(self.doubleSpinBoxStep.value()))
         else:
             self.sender.send_immediately("G91 Z-" + str(self.doubleSpinBoxStep.value()))
-
-        self.sender.send_immediately("G90")
+            self.sender.send_immediately("G90")
 
     def feed_hold(self):
         self.pushButtonPause.setEnabled(False)
         self.pushButtonResume.setEnabled(True)
 
         self.sender.feed_hold()
+        self.labelLastStateVar.setText("Hold")
 
     def resume(self):
         self.pushButtonPause.setEnabled(True)
         self.pushButtonResume.setEnabled(False)
 
         self.sender.resume()
+        self.labelLastStateVar.setText("Run")
+        self.thread_run_time.start()
 
     def kill_alarm(self):
         self.pushButtonPause.setEnabled(False)
@@ -174,6 +181,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.pushButtonStop.setEnabled(False)
 
         self.sender.kill_alarm()
+        self.labelLastStateVar.setText("Hold")
 
     def homing(self):
         self.sender.homing()
@@ -181,6 +189,8 @@ class Window(QMainWindow, Ui_MainWindow):
                 and self.pushButtonStop.isEnabled() is False:
             self.pushButtonResume.setEnabled(True)
             self.pushButtonStop.setEnabled(True)
+            self.labelLastStateVar.setText("Run")
+            self.thread_run_time.start()
 
     def start_stream_code(self):
         self.pushButtonPause.setEnabled(True)
@@ -188,6 +198,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.pushButtonRunCode.setEnabled(False)
 
         self.sender.job_run()
+        self.labelLastStateVar.setText("Run")
+        self.thread_run_time.start()
 
     def general(self):
         dialog_general = DialogGeneral(self, self.sender, self.is_incremental_streaming)
@@ -222,6 +234,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.pushButtonZManualControlMinus.setEnabled(True)
         self.doubleSpinBoxStep.setEnabled(True)
         self.checkBoxG90Step.setEnabled(True)
+
+        self.run_time_sec = -1
 
         if self.is_polling_on is True:
             self.sender.poll_start()
