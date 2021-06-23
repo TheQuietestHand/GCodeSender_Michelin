@@ -18,6 +18,40 @@ from components.filtering_window import Ui_DialogFiltering
 from logic import GCodeSender
 
 
+class RuntimeClock(threading.Thread):
+    def __init__(self, labelRuntimeVar=None, last_state=None):
+        threading.Thread.__init__(self)
+        self.paused = False
+        self.pause_cond = threading.Condition(threading.Lock())
+        self.run_time_sec = -1
+        self.labelRuntimeVar = labelRuntimeVar
+        self.last_state = last_state
+
+    def run(self):
+        while True:
+            with self.pause_cond:
+                while self.paused:
+                    self.pause_cond.wait()
+
+                self.run_time_sec += 1
+                self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
+                time.sleep(1)
+
+    def pause(self):
+        self.paused = True
+        self.pause_cond.acquire()
+
+    def resume(self):
+        self.paused = False
+        self.pause_cond.notify()
+        self.pause_cond.release()
+
+    def reset(self):
+        self.paused = True
+        self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(0)))
+        self.run_time_sec = -1
+
+
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -31,6 +65,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.listViewCode.setModel(self.code_model)
         self.listViewCode.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
+        self.console_model = QtGui.QStandardItemModel()
+        self.listViewConsole.setModel(self.console_model)
+        self.listViewCode.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
         self.connect_signals_slots()
         self.sender = GCodeSender(self.callback)
         self.sender.setup_log_handler()
@@ -38,9 +76,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.is_file_load = False
         self.is_polling_on = False
         self.is_incremental_streaming = True
+        self.is_first_run = True
 
-        self.thread_run_time = threading.Thread(target=self._run_time)
-        self.run_time_sec = -1
+        self.run_time_clock = RuntimeClock(self.labelRuntimeVar, self.labelLastStateVar.text())
+        self.last_state_checker = threading.Thread(target=self.check_state)
 
         self.last_distance_mode = None
 
@@ -78,6 +117,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.spinBoxStartFrom.valueChanged.connect(self.set_starting_line)
         self.spinBoxDoTo.valueChanged.connect(self.set_ending_line)
 
+        # Console
+        self.pushButtonSendCode.clicked.connect(self.send_code_manual)
+
     def load_file(self):
         file_filter = "Text files (*.txt)|*.txt"
         response = QFileDialog.getOpenFileName(
@@ -111,12 +153,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.is_file_load = True
         self.prepare_to_streaming()
-
-    def _run_time(self):
-        while self.labelLastStateVar.text() == "Run":
-            self.run_time_sec += 1
-            self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
-            time.sleep(1)
 
     def manual_X_plus(self):
         if self.last_distance_mode == "G91":
@@ -160,6 +196,13 @@ class Window(QMainWindow, Ui_MainWindow):
             self.sender.send_immediately("G91 Z-" + str(self.doubleSpinBoxStep.value()))
             self.sender.send_immediately("G90")
 
+    def send_code_manual(self):
+        line = self.lineEditCodeToSend.text()
+        self.lineEditCodeToSend.setText("")
+        self.sender.send_immediately(line)
+        item = QtGui.QStandardItem("> {}".format(line))
+        self.console_model.appendRow(item)
+
     def feed_hold(self):
         self.pushButtonPause.setEnabled(False)
         self.pushButtonResume.setEnabled(True)
@@ -173,7 +216,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.sender.resume()
         self.labelLastStateVar.setText("Run")
-        self.thread_run_time.start()
 
     def kill_alarm(self):
         self.pushButtonPause.setEnabled(False)
@@ -190,7 +232,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.pushButtonResume.setEnabled(True)
             self.pushButtonStop.setEnabled(True)
             self.labelLastStateVar.setText("Run")
-            self.thread_run_time.start()
 
     def start_stream_code(self):
         self.pushButtonPause.setEnabled(True)
@@ -199,7 +240,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.sender.job_run()
         self.labelLastStateVar.setText("Run")
-        self.thread_run_time.start()
+
+        if self.is_first_run:
+            self.run_time_clock.start()
+            self.last_state_checker.start()
+            self.is_first_run = False
 
     def general(self):
         dialog_general = DialogGeneral(self, self.sender, self.is_incremental_streaming)
@@ -235,10 +280,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.doubleSpinBoxStep.setEnabled(True)
         self.checkBoxG90Step.setEnabled(True)
 
-        self.run_time_sec = -1
-
-        if self.is_polling_on is True:
+        if self.is_polling_on:
             self.sender.poll_start()
+
+        if self.is_first_run is False:
+            self.run_time_clock.reset()
 
     def connect(self):
         dialog_connect = DialogConnect(self, self.sender)
@@ -249,9 +295,13 @@ class Window(QMainWindow, Ui_MainWindow):
             self.actionSoft_reset.setEnabled(True)
             self.actionReset.setEnabled(True)
             self.actionConnect.setEnabled(False)
+            self.pushButtonSendCode.setEnabled(True)
+            self.lineEditCodeToSend.setEnabled(True)
+
             self.prepare_to_streaming()
 
         self.sender.incremental_streaming = self.is_incremental_streaming
+        self.labelLastStateVar.setText("Idle")
 
     def disconnect(self):
         self.sender.disconnect()
@@ -293,6 +343,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.doubleSpinBoxStep.setEnabled(False)
         self.checkBoxG90Step.setEnabled(False)
 
+        self.pushButtonSendCode.setEnabled(False)
+        self.lineEditCodeToSend.setEnabled(False)
+
     def callback(self, eventstring, *data):
         args = []
         for d in data:
@@ -310,9 +363,29 @@ class Window(QMainWindow, Ui_MainWindow):
         if eventstring == "State update":
             self.labelLastStateVar.setText(args[0])
 
+            mpos = tuple(map(float, args[1][1:-1].split(', ')))
+            self.lineEditXMachine.setText(str(mpos[0]))
+            self.lineEditYMachine.setText(str(mpos[1]))
+            self.lineEditZMachine.setText(str(mpos[2]))
+
+            wpos = tuple(map(float, args[2][1:-1].split(', ')))
+            self.lineEditXWork.setText(str(wpos[0]))
+            self.lineEditYWork.setText(str(wpos[1]))
+            self.lineEditZWork.setText(str(wpos[2]))
+
         log = "{}: {}".format(eventstring.ljust(30), ", ".join(args))
         item = QtGui.QStandardItem(log)
         self.logs_model.appendRow(item)
+
+    def check_state(self):
+        is_running = True
+        while True:
+            if self.labelLastStateVar.text() != "Run" and is_running is True:
+                self.run_time_clock.pause()
+                is_running = False
+            elif self.labelLastStateVar.text() == "Run" and is_running is False:
+                self.run_time_clock.resume()
+                is_running = True
 
 
 class DialogGeneral(QDialog, Ui_DialogGeneral):

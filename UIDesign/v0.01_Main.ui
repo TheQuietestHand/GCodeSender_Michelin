@@ -1019,116 +1019,23 @@
              <string>Console</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_13">
-             <item row="0" column="0" rowspan="11">
-              <widget class="QListWidget" name="listWidget"/>
+             <item row="0" column="0" colspan="2">
+              <widget class="QListView" name="listViewConsole"/>
              </item>
-             <item row="0" column="1" colspan="2">
-              <widget class="QLabel" name="label_2">
-               <property name="text">
-                <string>Grbl commands</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
+             <item row="1" column="0">
+              <widget class="QLineEdit" name="lineEditCodeToSend">
+               <property name="enabled">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
-             <item row="1" column="2">
-              <widget class="QPushButton" name="pushButtonGrblHelp">
+             <item row="1" column="1">
+              <widget class="QPushButton" name="pushButtonSendCode">
                <property name="enabled">
                 <bool>false</bool>
                </property>
                <property name="text">
-                <string>Help</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QPushButton" name="pushButtonGrblSettings">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Grbl Settings</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="2">
-              <widget class="QPushButton" name="pushButtonGrblParameters">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Parameters</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="2">
-              <widget class="QPushButton" name="pushButtonGrblParserState">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Parser state</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="2">
-              <widget class="QPushButton" name="pushButtonGrblBuildInfo">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Build info</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="2">
-              <widget class="QPushButton" name="pushButtonGrblStartupBlocks">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Startup blocks</string>
-               </property>
-              </widget>
-             </item>
-             <item row="7" column="2">
-              <widget class="QPushButton" name="pushButtonGrblCheck">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Check</string>
-               </property>
-              </widget>
-             </item>
-             <item row="8" column="2">
-              <widget class="QPushButton" name="pushButtonGrblUnlock">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Unlock GRBL</string>
-               </property>
-              </widget>
-             </item>
-             <item row="9" column="2">
-              <widget class="QPushButton" name="pushButtonGrblHomingCycle">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Homing cycle</string>
-               </property>
-              </widget>
-             </item>
-             <item row="10" column="2">
-              <widget class="QPushButton" name="pushButtonGrblRefreshPos">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Refresh pos</string>
+                <string>Send</string>
                </property>
               </widget>
              </item>

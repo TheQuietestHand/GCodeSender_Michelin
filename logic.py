@@ -344,21 +344,8 @@ class GCodeSender:
             self._interface_write("$H\n")
 
     def send_immediately(self, line):
-        bytes_in_firmware_buffer = sum(self._rx_buffer_fill)
-        if bytes_in_firmware_buffer > 0:
-            self.logger.error("Firmware buffer has {:d} unprocessed bytes in it. Will not send: {}".format(bytes_in_firmware_buffer, line))
-            return
-
         if self.cmode == "Alarm":
             self.logger.error("Grbl is in ALARM state. Will not send: {}".format(line))
-            return
-
-        if self.cmode == "Hold":
-            self.logger.error("Grbl is in HOLD state. Will not send: {}".format(line))
-            return
-
-        if "$#" in line:
-            self.view_hash_state = True
             return
 
         self.preprocessor.set_line(line)
