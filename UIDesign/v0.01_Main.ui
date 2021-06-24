@@ -1057,7 +1057,14 @@
            </property>
            <layout class="QGridLayout" name="gridLayout_10">
             <item row="0" column="0">
-             <widget class="QOpenGLWidget" name="openGLWidget"/>
+             <widget class="QFrame" name="frameGL">
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>

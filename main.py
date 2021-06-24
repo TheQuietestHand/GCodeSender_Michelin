@@ -4,6 +4,8 @@ import serial.tools.list_ports
 import time
 import threading
 
+from OpenGLVisualisation import MyOpenGlWidget
+
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QMainWindow, QFileDialog, QAbstractItemView
 )
@@ -82,6 +84,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.last_state_checker = threading.Thread(target=self.check_state)
 
         self.last_distance_mode = None
+
+        self.openGL = MyOpenGlWidget(parent=self.frameGL)
+        self.openGL.setMinimumSize(985, 711)
 
     def connect_signals_slots(self):
         # Menu bar
@@ -353,6 +358,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
         if eventstring == "Gcode parser state update":
             self.last_distance_mode = d[4]
+            self.lineEditFeedRate.setText(str(d[10]))
+            self.lineEditSpeedSpindle.setText(str(d[11]))
 
         if eventstring == "Writing":
             if "G90" in d:

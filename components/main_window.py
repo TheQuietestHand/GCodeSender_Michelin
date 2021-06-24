@@ -12,6 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_MainWindow(object):
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
@@ -513,9 +514,11 @@ class Ui_MainWindow(object):
         self.groupBoxVisualisation.setObjectName("groupBoxVisualisation")
         self.gridLayout_10 = QtWidgets.QGridLayout(self.groupBoxVisualisation)
         self.gridLayout_10.setObjectName("gridLayout_10")
-        self.openGLWidget = QtWidgets.QOpenGLWidget(self.groupBoxVisualisation)
-        self.openGLWidget.setObjectName("openGLWidget")
-        self.gridLayout_10.addWidget(self.openGLWidget, 0, 0, 1, 1)
+        self.frameGL = QtWidgets.QFrame(self.groupBoxVisualisation)
+        self.frameGL.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frameGL.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frameGL.setObjectName("frameGL")
+        self.gridLayout_10.addWidget(self.frameGL, 0, 0, 1, 1)
         self.gridLayout_6.addWidget(self.groupBoxVisualisation, 0, 0, 1, 1)
         self.gridLayout_15.addLayout(self.gridLayout_6, 1, 1, 2, 2)
         self.gridLayout_3 = QtWidgets.QGridLayout()

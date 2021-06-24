@@ -155,6 +155,8 @@ class GCodeSender:
         self.preprocessor.cs_offsets = self.settings_hash
         self._callback("Gcode parser state update", self.gps)
 
+        self.verticies = []
+
     @property
     def current_line_number(self):
         return self._current_line_nr
@@ -246,6 +248,7 @@ class GCodeSender:
 
         self._callback("Buffer size change", self.buffer_size)
         self._callback("Vars change", self.preprocessor.vars)
+        self.get_points_from_buffer()
 
     def connect(self, port=None, baudrate=115200):
         if port is None or port.strip() == "":
@@ -710,6 +713,57 @@ class GCodeSender:
 
     def _get_state(self):
         self._interface.write("?")
+
+    def get_points_from_buffer(self):
+        for command in self.buffer:
+            x = 0
+            y = 0
+            z = 0
+            if command.find("X") != -1 or command.find("Y") != -1 or command.find("Z") != -1:
+                if command.find("X") != -1:
+                    start = command.find("X") + 1
+                    stop = start
+                    while command[stop].isalpha() is False and stop < len(command) - 1 and command[stop] != ";":
+                        stop += 1
+                    if start == stop:
+                        x = float(command[start])
+                    else:
+                        x = float(command[start:stop])
+                elif len(self.verticies) == 0:
+                    x = 0
+                else:
+                    x = self.verticies[len(self.verticies) - 1][0]
+
+                if command.find("Y") != -1:
+                    start = command.find("Y") + 1
+                    stop = start
+                    while command[stop].isalpha() is False and stop < len(command) - 1 and command[stop] != ";":
+                        stop += 1
+                    if start == stop:
+                        y = float(command[start])
+                    else:
+                        y = float(command[start:stop])
+                elif len(self.verticies) == 0:
+                    y = 0
+                else:
+                    y = self.verticies[len(self.verticies) - 1][1]
+
+                if command.find("Z") != -1:
+                    start = command.find("Z") + 1
+                    stop = start
+                    while command[stop].isalpha() is False and stop < len(command) - 1 and command[stop] != ";":
+                        stop += 1
+                    if start == stop:
+                        z = float(command[start])
+                    else:
+                        z = float(command[start:stop])
+                elif len(self.verticies) == 0:
+                    z = 0
+                else:
+                    z = self.verticies[len(self.verticies) - 1][2]
+
+                p = (x, y, z)
+                self.verticies.append(p)
 
 
 class CallbackLogHandler(logging.StreamHandler):
