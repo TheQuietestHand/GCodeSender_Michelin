@@ -1,25 +1,84 @@
 import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from PyQt5.QtWidgets import QOpenGLWidget, QApplication
+from OpenGL.arrays import vbo
+import numpy as np
+from PyQt5 import QtOpenGL
 
 
-class MyOpenGlWidget(QOpenGLWidget):
+class MyOpenGlWidget(QtOpenGL.QGLWidget):
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.called = False
+        QtOpenGL.QGLWidget.__init__(self, parent)
+
+    def initGeometry(self, points=None, edges=None):
+        if points is None or edges is None:
+            self.points = np.array(
+                [[0.0, 0.0, 0.0],
+                 [1.0, 0.0, 0.0],
+                 [1.0, 1.0, 0.0],
+                 [0.0, 1.0, 0.0],
+                 [0.0, 0.0, 1.0],
+                 [1.0, 0.0, 1.0],
+                 [1.0, 1.0, 1.0],
+                 [0.0, 1.0, 1.0]])
+            self.vertVBO = vbo.VBO(np.reshape(self.points, (1, -1)).astype(np.float32))
+            self.vertVBO.bind()
+
+            self.edges = np.array(
+                [0, 1, 2, 3,
+                 3, 2, 6, 7,
+                 1, 0, 4, 5,
+                 2, 1, 5, 6,
+                 0, 3, 7, 4,
+                 7, 6, 5, 4])
+        else:
+            self.points = np.array(points)
+
+            self.vertVBO = vbo.VBO(np.reshape(self.points, (1, -1)).astype(np.float32))
+            self.vertVBO.bind()
+
+            self.edges = np.array(edges)
 
     def initializeGL(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
-        glClear(GL_COLOR_BUFFER_BIT)
+        glEnable(GL_DEPTH_TEST)
+
+        self.initGeometry()
+
+        self.rotX = 0.0
+        self.rotY = 0.0
+        self.rotZ = 0.0
 
     def resizeGL(self, w, h):
+        glViewport(0, 0, w, h)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        glOrtho(-50, 50, -50, 50, -50.0, 50.0)
+        aspect = w / float(h)
 
-        glViewport(0, 0, w, h)
+        gluPerspective(45.0, aspect, 1.0, 2000.0)
+
+        glMatrixMode(GL_MODELVIEW)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
     def paintGL(self, coordinates=None):
-        glColor3f(1.0, 0.0, 0.0)
-        glRectf(-5, -5, 5, 5)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        glPushMatrix()
+
+        glTranslate(0.0, 0.0, -50.0)
+        glScale(20.0, 20.0, 20.0)
+        glRotate(self.rotX, 1.0, 0.0, 0.0)
+        glRotate(self.rotY, 0.0, 1.0, 0.0)
+        glRotate(self.rotZ, 0.0, 0.0, 1.0)
+        glTranslate(-0.5, -0.5, -0.5)
+
+        glEnableClientState(GL_VERTEX_ARRAY)
+
+        glVertexPointer(3, GL_FLOAT, 0, self.vertVBO)
+
+        glDrawElements(GL_QUADS, len(self.edges), GL_UNSIGNED_INT, self.edges)
+
+        glDisableClientState(GL_VERTEX_ARRAY)
+        glDisableClientState(GL_COLOR_ARRAY)
+
+        glPopMatrix()

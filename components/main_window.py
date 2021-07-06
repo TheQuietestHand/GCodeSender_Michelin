@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'UIDesign/V0.01_Main.ui'
+# Form implementation generated from reading ui file 'UIDesign/v0.01_Main.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -12,7 +12,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_MainWindow(object):
-
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
@@ -519,6 +518,21 @@ class Ui_MainWindow(object):
         self.frameGL.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frameGL.setObjectName("frameGL")
         self.gridLayout_10.addWidget(self.frameGL, 0, 0, 1, 1)
+        self.horizontalSliderVisualisationX = QtWidgets.QSlider(self.groupBoxVisualisation)
+        self.horizontalSliderVisualisationX.setMaximum(360)
+        self.horizontalSliderVisualisationX.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSliderVisualisationX.setObjectName("horizontalSliderVisualisationX")
+        self.gridLayout_10.addWidget(self.horizontalSliderVisualisationX, 1, 0, 1, 1)
+        self.horizontalSliderVisualisationY = QtWidgets.QSlider(self.groupBoxVisualisation)
+        self.horizontalSliderVisualisationY.setMaximum(360)
+        self.horizontalSliderVisualisationY.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSliderVisualisationY.setObjectName("horizontalSliderVisualisationY")
+        self.gridLayout_10.addWidget(self.horizontalSliderVisualisationY, 2, 0, 1, 1)
+        self.horizontalSliderVisualisationZ = QtWidgets.QSlider(self.groupBoxVisualisation)
+        self.horizontalSliderVisualisationZ.setMaximum(360)
+        self.horizontalSliderVisualisationZ.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSliderVisualisationZ.setObjectName("horizontalSliderVisualisationZ")
+        self.gridLayout_10.addWidget(self.horizontalSliderVisualisationZ, 3, 0, 1, 1)
         self.gridLayout_6.addWidget(self.groupBoxVisualisation, 0, 0, 1, 1)
         self.gridLayout_15.addLayout(self.gridLayout_6, 1, 1, 2, 2)
         self.gridLayout_3 = QtWidgets.QGridLayout()

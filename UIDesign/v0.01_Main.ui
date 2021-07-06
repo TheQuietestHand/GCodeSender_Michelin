@@ -1066,6 +1066,36 @@
               </property>
              </widget>
             </item>
+            <item row="1" column="0">
+             <widget class="QSlider" name="horizontalSliderVisualisationX">
+              <property name="maximum">
+               <number>360</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QSlider" name="horizontalSliderVisualisationY">
+              <property name="maximum">
+               <number>360</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QSlider" name="horizontalSliderVisualisationZ">
+              <property name="maximum">
+               <number>360</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
          </item>

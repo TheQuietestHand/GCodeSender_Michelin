@@ -70,10 +70,8 @@ class GCodeSender:
             "PRB": (0, 0, 0),
         }
 
-        # Set 'True' to send to grbl '$G' command.
         self.view_gcode_parser_state = False
 
-        # Set 'True' to get callback with the hash settings
         self.view_hash_state = False
 
         # Initializing logger
@@ -81,7 +79,6 @@ class GCodeSender:
         self.logger.setLevel(5)
         self.logger.propagate = False
 
-        # "True" if connected to grbl
         self.connected = False
 
         # Preprocessor is the gcode state machine emulator.
@@ -95,13 +92,10 @@ class GCodeSender:
         # The currently travelled distance.
         self.travel_distance_current = {}
 
-        # "True" if the machine is standstill
         self.is_standstill = False
 
-        # Var for checking if the machine is standstill
         self._standstill_watchdog_increment = 0
 
-        # Name of serial port to connect
         self._interface_port = None
         self._last_setting_number = 132
 
@@ -142,7 +136,7 @@ class GCodeSender:
         self._interface = None
         self._queue = Queue()
 
-        self._longhandler = None
+        self._loghandler = None
 
         self._counter = 0
 
@@ -155,7 +149,8 @@ class GCodeSender:
         self.preprocessor.cs_offsets = self.settings_hash
         self._callback("Gcode parser state update", self.gps)
 
-        self.verticies = []
+        self.points = []
+        self.edges = []
 
     @property
     def current_line_number(self):
@@ -206,9 +201,9 @@ class GCodeSender:
 
     def setup_log_handler(self):
         lh = CallbackLogHandler()
-        self._longhandler = lh
-        self.logger.addHandler(self._longhandler)
-        self._longhandler.callback = self._callback
+        self._loghandler = lh
+        self.logger.addHandler(self._loghandler)
+        self._loghandler.callback = self._callback
 
     def load_file(self, filepath):
         if not self.job_finished:
@@ -248,7 +243,10 @@ class GCodeSender:
 
         self._callback("Buffer size change", self.buffer_size)
         self._callback("Vars change", self.preprocessor.vars)
+        self.points.clear()
+        self.edges.clear()
         self.get_points_from_buffer()
+        self.get_edges()
 
     def connect(self, port=None, baudrate=115200):
         if port is None or port.strip() == "":
@@ -714,6 +712,13 @@ class GCodeSender:
     def _get_state(self):
         self._interface.write("?")
 
+    def get_edges(self):
+        for x in range(0, len(self.points) - 2):
+            self.edges.append(x)
+            self.edges.append(x + 1)
+            self.edges.append(x + 1)
+            self.edges.append(x)
+
     def get_points_from_buffer(self):
         for command in self.buffer:
             x = 0
@@ -729,10 +734,10 @@ class GCodeSender:
                         x = float(command[start])
                     else:
                         x = float(command[start:stop])
-                elif len(self.verticies) == 0:
+                elif len(self.points) == 0:
                     x = 0
                 else:
-                    x = self.verticies[len(self.verticies) - 1][0]
+                    x = self.points[len(self.points) - 1][0]
 
                 if command.find("Y") != -1:
                     start = command.find("Y") + 1
@@ -743,10 +748,10 @@ class GCodeSender:
                         y = float(command[start])
                     else:
                         y = float(command[start:stop])
-                elif len(self.verticies) == 0:
+                elif len(self.points) == 0:
                     y = 0
                 else:
-                    y = self.verticies[len(self.verticies) - 1][1]
+                    y = self.points[len(self.points) - 1][1]
 
                 if command.find("Z") != -1:
                     start = command.find("Z") + 1
@@ -757,13 +762,13 @@ class GCodeSender:
                         z = float(command[start])
                     else:
                         z = float(command[start:stop])
-                elif len(self.verticies) == 0:
+                elif len(self.points) == 0:
                     z = 0
                 else:
-                    z = self.verticies[len(self.verticies) - 1][2]
+                    z = self.points[len(self.points) - 1][2]
 
                 p = (x, y, z)
-                self.verticies.append(p)
+                self.points.append(p)
 
 
 class CallbackLogHandler(logging.StreamHandler):

@@ -4,6 +4,8 @@ import serial.tools.list_ports
 import time
 import threading
 
+from PyQt5.QtCore import QTimer
+
 from OpenGLVisualisation import MyOpenGlWidget
 
 from PyQt5.QtWidgets import (
@@ -59,34 +61,47 @@ class Window(QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
 
+        # Logs list view model init
         self.logs_model = QtGui.QStandardItemModel()
         self.listViewLogs.setModel(self.logs_model)
         self.listViewLogs.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
+        # Code list view model init
         self.code_model = QtGui.QStandardItemModel()
         self.listViewCode.setModel(self.code_model)
         self.listViewCode.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
+        # Console list view model init
         self.console_model = QtGui.QStandardItemModel()
         self.listViewConsole.setModel(self.console_model)
         self.listViewCode.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-        self.connect_signals_slots()
+        # OpenGL widget init
+        self.openGL = MyOpenGlWidget(parent=self.frameGL)
+        self.openGL.setGeometry(0, 0, 0, 0)
+        self.openGL.resize(985, 627)
+        self.openGL_timer = QTimer(self)
+        self.openGL_timer.setInterval(20)
+        self.openGL_timer.timeout.connect(self.openGL.updateGL)
+        self.openGL_timer.start()
+
+        # Runtime clock init
+        self.run_time_clock = RuntimeClock(self.labelRuntimeVar, self.labelLastStateVar.text())
+        self.last_state_checker = threading.Thread(target=self.check_state)
+
+        # Sender init
         self.sender = GCodeSender(self.callback)
         self.sender.setup_log_handler()
 
+        # Connecting signal slots
+        self.connect_signals_slots()
+
+        # Some flags
         self.is_file_load = False
         self.is_polling_on = False
         self.is_incremental_streaming = True
         self.is_first_run = True
-
-        self.run_time_clock = RuntimeClock(self.labelRuntimeVar, self.labelLastStateVar.text())
-        self.last_state_checker = threading.Thread(target=self.check_state)
-
         self.last_distance_mode = None
-
-        self.openGL = MyOpenGlWidget(parent=self.frameGL)
-        self.openGL.setMinimumSize(985, 711)
 
     def connect_signals_slots(self):
         # Menu bar
@@ -125,14 +140,19 @@ class Window(QMainWindow, Ui_MainWindow):
         # Console
         self.pushButtonSendCode.clicked.connect(self.send_code_manual)
 
+        # Visualisation
+        self.horizontalSliderVisualisationX.valueChanged.connect(self.set_openGL_rotate_X)
+        self.horizontalSliderVisualisationY.valueChanged.connect(self.set_openGL_rotate_Y)
+        self.horizontalSliderVisualisationZ.valueChanged.connect(self.set_openGL_rotate_Z)
+
     def load_file(self):
-        file_filter = "Text files (*.txt)|*.txt"
+        file_filter = "CNC files (*.nc)|*.nc"
         response = QFileDialog.getOpenFileName(
             parent=self,
             caption="Select a data file",
             directory=os.getcwd(),
             filter=file_filter,
-            initialFilter="Text files (*.txt)|*.txt"
+            initialFilter="CNC files (*.nc)|*.nc"
         )
 
         self.sender.load_file(response[0])
@@ -158,6 +178,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.is_file_load = True
         self.prepare_to_streaming()
+
+        # points = [(0.0, 0.0, 0.0),
+        #           (1.0, 0.0, 0.0),
+        #           (1.0, 1.0, 0.0)]
+        #
+        # edges = [0, 1, 1, 0,
+        #          1, 2, 2, 1]
+
+        self.openGL.initGeometry(self.sender.points, self.sender.edges)
 
     def manual_X_plus(self):
         if self.last_distance_mode == "G91":
@@ -350,6 +379,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.pushButtonSendCode.setEnabled(False)
         self.lineEditCodeToSend.setEnabled(False)
+
+    def set_openGL_rotate_X(self):
+        self.openGL.rotX = self.horizontalSliderVisualisationX.value()
+
+    def set_openGL_rotate_Y(self):
+        self.openGL.rotY = self.horizontalSliderVisualisationY.value()
+
+    def set_openGL_rotate_Z(self):
+        self.openGL.rotZ = self.horizontalSliderVisualisationZ.value()
 
     def callback(self, eventstring, *data):
         args = []

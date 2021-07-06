@@ -21,3 +21,73 @@
             commPortComboBox.setSelectedIndex(0);
         }
     }
+
+    // OpenGLVisualisation class
+    import sys
+    from OpenGL.GL import *
+    from OpenGL.GLU import *
+    from PyQt5.QtWidgets import QOpenGLWidget, QApplication
+
+
+    class MyOpenGlWidget(QOpenGLWidget):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+
+            # Place holder values for tests (just cube)
+            self.edges = [
+                (0, 1),
+                (0, 3),
+                (0, 4),
+                (2, 1),
+                (2, 3),
+                (2, 7),
+                (6, 3),
+                (6, 4),
+                (6, 7),
+                (5, 1),
+                (5, 4),
+                (5, 7)
+            ]
+            self.points = [
+                (1, -1, -1),
+                (1, 1, -1),
+                (-1, 1, -1),
+                (-1, -1, -1),
+                (1, -1, 1),
+                (1, 1, 1),
+                (-1, -1, 1),
+                (-1, 1, 1)
+            ]
+
+            self.called = False
+
+        def initializeGL(self):
+            glClearColor(0.0, 0.0, 0.0, 0.0)
+            glEnable(GL_DEPTH_TEST)
+            glClear(GL_COLOR_BUFFER_BIT)
+
+        def resizeGL(self, w, h):
+            glViewport(0, 0, w, h)
+            glMatrixMode(GL_PROJECTION)
+            glLoadIdentity()
+            aspect = w / float(h)
+
+            gluPerspective(45.0, aspect, 1.0, 100.0)
+
+            glMatrixMode(GL_MODELVIEW)
+
+        def paintGL(self, coordinates=None):
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            glColor3f(1.0, 0.0, 0.0)
+            self.visualization_block()
+
+        def visualization_block(self):
+            glBegin(GL_LINES)
+            for edge in self.edges:
+                for point in edge:
+                    glVertex3fv(self.points[point])
+            glEnd()
+
+        def update_edges_and_points(self, edges, points):
+            self.edges = edges
+            self.points = points
