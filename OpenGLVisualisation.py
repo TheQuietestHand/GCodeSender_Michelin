@@ -11,33 +11,20 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
         QtOpenGL.QGLWidget.__init__(self, parent)
 
     def initGeometry(self, points=None, edges=None):
-        if points is None or edges is None:
-            self.points = np.array(
-                [[0.0, 0.0, 0.0],
-                 [1.0, 0.0, 0.0],
-                 [1.0, 1.0, 0.0],
-                 [0.0, 1.0, 0.0],
-                 [0.0, 0.0, 1.0],
-                 [1.0, 0.0, 1.0],
-                 [1.0, 1.0, 1.0],
-                 [0.0, 1.0, 1.0]])
-            self.vertVBO = vbo.VBO(np.reshape(self.points, (1, -1)).astype(np.float32))
-            self.vertVBO.bind()
-
-            self.edges = np.array(
-                [0, 1, 2, 3,
-                 3, 2, 6, 7,
-                 1, 0, 4, 5,
-                 2, 1, 5, 6,
-                 0, 3, 7, 4,
-                 7, 6, 5, 4])
-        else:
+        if points is not None and edges is not None:
             self.points = np.array(points)
 
             self.vertVBO = vbo.VBO(np.reshape(self.points, (1, -1)).astype(np.float32))
             self.vertVBO.bind()
 
             self.edges = np.array(edges)
+        else:
+            self.points = np.array([])
+
+            self.vertVBO = vbo.VBO(np.reshape(self.points, (1, -1)).astype(np.float32))
+            self.vertVBO.bind()
+
+            self.edges = np.array([])
 
     def initializeGL(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -55,7 +42,7 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
         glLoadIdentity()
         aspect = w / float(h)
 
-        gluPerspective(45.0, aspect, 1.0, 2000.0)
+        gluPerspective(45.0, aspect, 1.0, 100.0)
 
         glMatrixMode(GL_MODELVIEW)
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
@@ -66,7 +53,7 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
         glPushMatrix()
 
         glTranslate(0.0, 0.0, -50.0)
-        glScale(20.0, 20.0, 20.0)
+        glScale(0.1, 0.1, 0.1)
         glRotate(self.rotX, 1.0, 0.0, 0.0)
         glRotate(self.rotY, 0.0, 1.0, 0.0)
         glRotate(self.rotZ, 0.0, 0.0, 1.0)
@@ -79,6 +66,5 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
         glDrawElements(GL_QUADS, len(self.edges), GL_UNSIGNED_INT, self.edges)
 
         glDisableClientState(GL_VERTEX_ARRAY)
-        glDisableClientState(GL_COLOR_ARRAY)
 
         glPopMatrix()

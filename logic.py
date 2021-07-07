@@ -152,6 +152,9 @@ class GCodeSender:
         self.points = []
         self.edges = []
 
+        self.ZMinMax = [0.0, 0.0]
+        self.FMin = 0.0
+
     @property
     def current_line_number(self):
         return self._current_line_nr
@@ -220,7 +223,6 @@ class GCodeSender:
             pass
 
     def _load_file_into_buffer(self, file):
-
         lines = file.split("\n")
 
         for line in lines:
@@ -720,10 +722,38 @@ class GCodeSender:
             self.edges.append(x)
 
     def get_points_from_buffer(self):
+        is_first_zminmax = True
+        is_first_fmin = True
+        last_motion_mode = None
+
         for command in self.buffer:
+
+            if command.find("G") != -1:
+                last_motion_mode = command[command.find("G"):command.find("G")+3]
+
+            if command.find("F") != -1:
+                start = command.find("F") + 1
+                stop = start
+                while command[stop].isalpha() is False and stop < len(command) - 1 and command[stop] != ";":
+                    stop += 1
+                if start == stop:
+                    f = float(command[start])
+                else:
+                    if stop == len(command) - 1:
+                        f = float(command[start:stop+1])
+                    else:
+                        f = float(command[start:stop])
+
+                if is_first_fmin is True:
+                    is_first_fmin = False
+                    self.FMin = f
+                elif f < self.FMin:
+                    self.FMin = f
+
             x = 0
             y = 0
             z = 0
+
             if command.find("X") != -1 or command.find("Y") != -1 or command.find("Z") != -1:
                 if command.find("X") != -1:
                     start = command.find("X") + 1
@@ -733,7 +763,10 @@ class GCodeSender:
                     if start == stop:
                         x = float(command[start])
                     else:
-                        x = float(command[start:stop])
+                        if stop == len(command) - 1:
+                            x = float(command[start:stop + 1])
+                        else:
+                            x = float(command[start:stop])
                 elif len(self.points) == 0:
                     x = 0
                 else:
@@ -747,7 +780,10 @@ class GCodeSender:
                     if start == stop:
                         y = float(command[start])
                     else:
-                        y = float(command[start:stop])
+                        if stop == len(command) - 1:
+                            y = float(command[start:stop + 1])
+                        else:
+                            y = float(command[start:stop])
                 elif len(self.points) == 0:
                     y = 0
                 else:
@@ -761,7 +797,21 @@ class GCodeSender:
                     if start == stop:
                         z = float(command[start])
                     else:
-                        z = float(command[start:stop])
+                        if stop == len(command) - 1:
+                            z = float(command[start:stop + 1])
+                        else:
+                            z = float(command[start:stop])
+
+                    if last_motion_mode != "G00" and is_first_zminmax is True:
+                        is_first_zminmax = False
+                        self.ZMinMax[0] = z
+                        self.ZMinMax[1] = z
+                    elif last_motion_mode != "G00":
+                        if z < self.ZMinMax[0]:
+                            self.ZMinMax[0] = z
+                        elif z > self.ZMinMax[1]:
+                            self.ZMinMax[1] = z
+
                 elif len(self.points) == 0:
                     z = 0
                 else:
@@ -769,7 +819,6 @@ class GCodeSender:
 
                 p = (x, y, z)
                 self.points.append(p)
-
 
 class CallbackLogHandler(logging.StreamHandler):
     def __init__(self, callback=None):

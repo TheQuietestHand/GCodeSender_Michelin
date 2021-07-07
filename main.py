@@ -146,13 +146,15 @@ class Window(QMainWindow, Ui_MainWindow):
         self.horizontalSliderVisualisationZ.valueChanged.connect(self.set_openGL_rotate_Z)
 
     def load_file(self):
-        file_filter = "CNC files (*.nc)|*.nc"
+        self.code_model.clear()
+
+        file_filter = "NC files (*.nc)|*.nc"
         response = QFileDialog.getOpenFileName(
             parent=self,
             caption="Select a data file",
             directory=os.getcwd(),
             filter=file_filter,
-            initialFilter="CNC files (*.nc)|*.nc"
+            initialFilter="NC files (*.nc)|*.nc"
         )
 
         self.sender.load_file(response[0])
@@ -178,13 +180,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.is_file_load = True
         self.prepare_to_streaming()
-
-        # points = [(0.0, 0.0, 0.0),
-        #           (1.0, 0.0, 0.0),
-        #           (1.0, 1.0, 0.0)]
-        #
-        # edges = [0, 1, 1, 0,
-        #          1, 2, 2, 1]
 
         self.openGL.initGeometry(self.sender.points, self.sender.edges)
 
@@ -297,28 +292,27 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.soft_reset()
 
     def prepare_to_streaming(self):
-        if self.is_file_load is True and self.actionDisconnect.isEnabled() is True:
+        if self.is_file_load is True and self.sender.is_connected() is True:
             self.pushButtonRunCode.setEnabled(True)
             self.spinBoxPeriod.setEnabled(True)
+            self.pushButtonHome.setEnabled(True)
+            self.pushButtonSetZero.setEnabled(True)
+            self.pushButtonZero.setEnabled(True)
 
-        self.pushButtonHome.setEnabled(True)
-        self.pushButtonSetZero.setEnabled(True)
-        self.pushButtonZero.setEnabled(True)
+            self.pushButtonXManualControlPlus.setEnabled(True)
+            self.pushButtonXManualControlMinus.setEnabled(True)
+            self.pushButtonYManualControlPlus.setEnabled(True)
+            self.pushButtonYManualControlMinus.setEnabled(True)
+            self.pushButtonZManualControlPlus.setEnabled(True)
+            self.pushButtonZManualControlMinus.setEnabled(True)
+            self.doubleSpinBoxStep.setEnabled(True)
+            self.checkBoxG90Step.setEnabled(True)
 
-        self.pushButtonXManualControlPlus.setEnabled(True)
-        self.pushButtonXManualControlMinus.setEnabled(True)
-        self.pushButtonYManualControlPlus.setEnabled(True)
-        self.pushButtonYManualControlMinus.setEnabled(True)
-        self.pushButtonZManualControlPlus.setEnabled(True)
-        self.pushButtonZManualControlMinus.setEnabled(True)
-        self.doubleSpinBoxStep.setEnabled(True)
-        self.checkBoxG90Step.setEnabled(True)
+            if self.is_polling_on:
+                self.sender.poll_start()
 
-        if self.is_polling_on:
-            self.sender.poll_start()
-
-        if self.is_first_run is False:
-            self.run_time_clock.reset()
+            if self.is_first_run is False:
+                self.run_time_clock.reset()
 
     def connect(self):
         dialog_connect = DialogConnect(self, self.sender)
