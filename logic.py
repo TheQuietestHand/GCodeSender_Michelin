@@ -3,14 +3,10 @@ import time
 import re
 import threading
 import atexit
-import os
-import collections
 from gcode_machine.gcode_machine import GcodeMachine
 from connection_interface import Interface
 
 from queue import Queue
-
-import callback
 
 
 class GCodeSender:
@@ -153,7 +149,10 @@ class GCodeSender:
         self.edges = []
 
         self.ZMinMax = [0.0, 0.0]
-        self.FMin = 0.0
+        self.FMinMax = [0, 0]
+        self.FMinMaxUser = [0, 0]
+
+        self.is_rt_feed_rate_on = False
 
     @property
     def current_line_number(self):
@@ -329,6 +328,13 @@ class GCodeSender:
         if self.is_connected() is True:
             self._interface_write("\x18")
             self.update_preprocessor_position()
+
+    def reset(self):
+        if self.is_connected() is True:
+            port = self._interface.port
+            baud = self._interface.baud
+            self.disconnect()
+            self.connect(port, baud)
 
     def kill_alarm(self):
         if self.is_connected() is True:
@@ -723,13 +729,13 @@ class GCodeSender:
 
     def get_points_from_buffer(self):
         is_first_zminmax = True
-        is_first_fmin = True
+        is_first_fminmax = True
         last_motion_mode = None
 
         for command in self.buffer:
 
             if command.find("G") != -1:
-                last_motion_mode = command[command.find("G"):command.find("G")+3]
+                last_motion_mode = command[command.find("G"):command.find("G") + 3]
 
             if command.find("F") != -1:
                 start = command.find("F") + 1
@@ -737,22 +743,21 @@ class GCodeSender:
                 while command[stop].isalpha() is False and stop < len(command) - 1 and command[stop] != ";":
                     stop += 1
                 if start == stop:
-                    f = float(command[start])
+                    f = int(command[start])
                 else:
                     if stop == len(command) - 1:
-                        f = float(command[start:stop+1])
+                        f = int(command[start:stop+1])
                     else:
-                        f = float(command[start:stop])
+                        f = int(command[start:stop])
 
-                if is_first_fmin is True:
-                    is_first_fmin = False
-                    self.FMin = f
-                elif f < self.FMin:
-                    self.FMin = f
-
-            x = 0
-            y = 0
-            z = 0
+                if is_first_fminmax is True:
+                    is_first_fminmax = False
+                    self.FMinMax[0] = f
+                    self.FMinMax[1] = f
+                elif f < self.FMinMax[0]:
+                    self.FMinMax[0] = f
+                elif f > self.FMinMax[1]:
+                    self.FMinMax[1] = f
 
             if command.find("X") != -1 or command.find("Y") != -1 or command.find("Z") != -1:
                 if command.find("X") != -1:

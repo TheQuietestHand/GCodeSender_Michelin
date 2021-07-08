@@ -1,4 +1,3 @@
-import sys
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.arrays import vbo

@@ -1,5 +1,4 @@
 import serial
-import time
 import threading
 import logging
 import sys

@@ -1157,6 +1157,7 @@
     <addaction name="actionGeneral"/>
     <addaction name="actionFiltering"/>
     <addaction name="actionDisplay"/>
+    <addaction name="actionFeed_rate"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -1234,6 +1235,11 @@
    </property>
    <property name="text">
     <string>Disconnect</string>
+   </property>
+  </action>
+  <action name="actionFeed_rate">
+   <property name="text">
+    <string>Feed rate</string>
    </property>
   </action>
  </widget>
