@@ -102,7 +102,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.is_incremental_streaming = True
         self.is_first_run = True
         self.is_rt_feed_rate_on = False
-        self.is_simple_rt_feed_rate_mode_on = True
         self.is_simple_take_feed_min = False
         self.is_simple_take_feed_max = False
         self.last_distance_mode = None
@@ -287,12 +286,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def feed_rate(self):
         dialog_feed_rate = DialogFeedRate(self, self.sender, self.is_file_load, self.is_rt_feed_rate_on,
-                                          self.is_simple_rt_feed_rate_mode_on, self.is_simple_take_feed_min,
-                                          self.is_simple_take_feed_max)
+                                          self.is_simple_take_feed_min, self.is_simple_take_feed_max)
         dialog_feed_rate.exec()
 
         self.is_rt_feed_rate_on = dialog_feed_rate.is_rt_feed_rate_on
-        self.is_simple_rt_feed_rate_mode_on = dialog_feed_rate.is_simple_rt_feed_rate_mode_on
         self.is_simple_take_feed_min = dialog_feed_rate.is_simple_take_feed_min
         self.is_simple_take_feed_max = dialog_feed_rate.is_simple_take_feed_max
 
@@ -449,22 +446,17 @@ class Window(QMainWindow, Ui_MainWindow):
 
 class DialogFeedRate(QDialog, Ui_DialogFeedRate):
     def __init__(self, parent=None, sender=None, is_file_load=None, is_rt_feed_rate_on=False,
-                 is_simple_rt_feed_rate_mode_on=True, is_simple_take_feed_min=False, is_simple_take_feed_max=False):
+                 is_simple_take_feed_min=False, is_simple_take_feed_max=False):
         super().__init__(parent)
         self.setupUi(self)
 
         self.sender = sender
         self.is_file_load = is_file_load
         self.is_rt_feed_rate_on = is_rt_feed_rate_on
-        self.is_simple_rt_feed_rate_mode_on = is_simple_rt_feed_rate_mode_on
         self.is_simple_take_feed_min = is_simple_take_feed_min
         self.is_simple_take_feed_max = is_simple_take_feed_max
 
         self.checkBoxEnableFeedRateCalculator.setChecked(self.is_rt_feed_rate_on)
-        if self.is_simple_rt_feed_rate_mode_on is True:
-            self.radioButtonSimple.toggle()
-        else:
-            self.radioButtonAdvance.toggle()
         self.checkBoxTakeMinFeed.setChecked(self.is_simple_take_feed_min)
         self.checkBoxTakeMaxFeed.setChecked(self.is_simple_take_feed_max)
 
@@ -473,18 +465,14 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
 
     def connect_signals_slots(self):
         self.checkBoxEnableFeedRateCalculator.stateChanged.connect(self.feed_rate_calculator)
-        self.radioButtonSimple.toggled.connect(self.simple)
-        self.radioButtonAdvance.toggled.connect(self.advance)
         self.checkBoxTakeMinFeed.stateChanged.connect(self.take_min_feed)
         self.checkBoxTakeMaxFeed.stateChanged.connect(self.take_max_feed)
         self.pushButton.clicked.connect(self.closing_dialog)
 
     def feed_rate_calculator(self):
         self.simple()
-        self.advance()
         self.take_min_feed()
         self.take_max_feed()
-        self.radio_buttons()
 
     def take_min_feed(self):
         if self.is_file_load is False:
@@ -495,7 +483,6 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
             self.spinBoxMinFeed.setValue(self.sender.FMinMax[0])
             self.is_simple_take_feed_min = True
         else:
-            self.spinBoxMinFeed.setEnabled(True)
             self.is_simple_take_feed_min = False
 
     def take_max_feed(self):
@@ -507,69 +494,35 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
             self.spinBoxMaxFeed.setValue(self.sender.FMinMax[1])
             self.is_simple_take_feed_max = True
         else:
-            self.spinBoxMaxFeed.setEnabled(True)
             self.is_simple_take_feed_max = False
 
-    def radio_buttons(self):
-        if self.checkBoxEnableFeedRateCalculator.isChecked() is True:
-            self.radioButtonSimple.setEnabled(True)
-            self.radioButtonAdvance.setEnabled(True)
-            self.is_rt_feed_rate_on = True
-        else:
-            self.radioButtonSimple.setEnabled(False)
-            self.radioButtonAdvance.setEnabled(False)
-            self.is_rt_feed_rate_on = False
-            self.disable_simple()
-            self.disable_advance()
-
-    def disable_simple(self):
-        self.checkBoxTakeMaxFeed.setEnabled(False)
-        self.checkBoxTakeMinFeed.setEnabled(False)
-        self.labelMaxFeed.setEnabled(False)
-        self.labelMinFeed.setEnabled(False)
-        self.spinBoxMaxFeed.setEnabled(False)
-        self.spinBoxMinFeed.setEnabled(False)
-
-    def disable_advance(self):
-        self.labelCutterDiameter.setEnabled(False)
-        self.labelSurfaceSpeed.setEnabled(False)
-        self.labelTeethQty.setEnabled(False)
-        self.labelToothLoad.setEnabled(False)
-        self.spinBoxTeethQty.setEnabled(False)
-        self.spinBoxSurfaceSpeed.setEnabled(False)
-        self.doubleSpinBoxCutterDiameter.setEnabled(False)
-        self.doubleSpinBoxToothLoad.setEnabled(False)
-
     def simple(self):
-        if self.radioButtonSimple.isChecked() is True:
+        if self.checkBoxEnableFeedRateCalculator.isChecked() is True:
             self.checkBoxTakeMaxFeed.setEnabled(True)
             self.checkBoxTakeMinFeed.setEnabled(True)
             self.labelMaxFeed.setEnabled(True)
             self.labelMinFeed.setEnabled(True)
             self.spinBoxMaxFeed.setEnabled(True)
             self.spinBoxMinFeed.setEnabled(True)
-            self.is_simple_rt_feed_rate_mode_on = True
         else:
-            self.disable_simple()
-            self.is_simple_rt_feed_rate_mode_on = False
-
-    def advance(self):
-        if self.radioButtonAdvance.isChecked() is True:
-            self.labelCutterDiameter.setEnabled(True)
-            self.labelSurfaceSpeed.setEnabled(True)
-            self.labelTeethQty.setEnabled(True)
-            self.labelToothLoad.setEnabled(True)
-            self.spinBoxTeethQty.setEnabled(True)
-            self.spinBoxSurfaceSpeed.setEnabled(True)
-            self.doubleSpinBoxCutterDiameter.setEnabled(True)
-            self.doubleSpinBoxToothLoad.setEnabled(True)
-        else:
-            self.disable_advance()
+            self.checkBoxTakeMaxFeed.setEnabled(False)
+            self.checkBoxTakeMinFeed.setEnabled(False)
+            self.labelMaxFeed.setEnabled(False)
+            self.labelMinFeed.setEnabled(False)
+            self.spinBoxMaxFeed.setEnabled(False)
+            self.spinBoxMinFeed.setEnabled(False)
 
     def closing_dialog(self):
-        self.sender.FMinMaxUser[0] = self.spinBoxMinFeed.value()
-        self.sender.FMinMaxUser[1] = self.spinBoxMaxFeed.value()
-        self.sender.is_rt_feed_rate_on = self.is_rt_feed_rate_on
+        if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() <= 0:
+            self.sender.preprocessor.do_feed_override = False
+            if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() < 0:
+                self.spinBoxMaxFeed.setValue(1)
+                self.spinBoxMinFeed.setValue(1)
+        else:
+            self.sender.difF = self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value()
+            self.sender.FMinMaxUser[0] = self.spinBoxMinFeed.value()
+            self.sender.FMinMaxUser[1] = self.spinBoxMaxFeed.value()
+            self.sender.preprocessor.do_feed_override = self.is_rt_feed_rate_on
 
 
 class DialogGeneral(QDialog, Ui_DialogGeneral):

@@ -149,10 +149,13 @@ class GCodeSender:
         self.edges = []
 
         self.ZMinMax = [0.0, 0.0]
+        self.difZ = 0.0
         self.FMinMax = [0, 0]
         self.FMinMaxUser = [0, 0]
+        self.difF = 0
 
-        self.is_rt_feed_rate_on = False
+        self.last_motion_mode = None
+        self.rt_feed_mode = None
 
     @property
     def current_line_number(self):
@@ -319,6 +322,7 @@ class GCodeSender:
         self._current_line_sent = True
         self.travel_distance_buffer = {}
         self.travel_distance_current = {}
+        self.last_motion_mode = None
 
     def view_settings(self):
         if self.is_connected() is True:
@@ -664,12 +668,22 @@ class GCodeSender:
             self._callback("Writing", line)
             self._interface.write(line)
 
+    def calculate_feed_rate(self, line):
+        z = self.get_z(line)
+        x = z - self.ZMinMax[0]
+        x_percent = x / self.difZ * 100
+        self.preprocessor.request_feed = self.FMinMax[0] + (self.difF * float(x_percent / 100))
+
     def _set_next_line(self, send_comments=False):
         progress_percent = int(100 * self._current_line_nr / self.buffer_size)
         self._callback("Progress as a percentage", progress_percent)
 
         if self._current_line_nr < self.buffer_size:
             line = self.buffer[self._current_line_nr].strip()
+            if line.find("G") != -1:
+                self.last_motion_mode = line[line.find("G"):line.find("G") + 3]
+            if self.preprocessor.do_feed_override is True and self.last_motion_mode != "G00" and line.find("Z") != -1:
+                self.calculate_feed_rate(line)
             self.preprocessor.set_line(line)
             self.preprocessor.substitute_vars()
             self.preprocessor.parse_state()
@@ -720,11 +734,26 @@ class GCodeSender:
     def _get_state(self):
         self._interface.write("?")
 
+    def get_z(self, line):
+        start = line.find("Z") + 1
+        stop = start
+        while line[stop].isalpha() is False and stop < len(line) - 1 and line[stop] != ";":
+            stop += 1
+        if start == stop:
+            z = float(line[start])
+        else:
+            if stop == len(line) - 1:
+                z = float(line[start:stop + 1])
+            else:
+                z = float(line[start:stop])
+
+        return z
+
     def get_edges(self):
         for x in range(0, len(self.points) - 2):
             self.edges.append(x)
-            self.edges.append(x + 1)
-            self.edges.append(x + 1)
+            self.edges.append(x+1)
+            self.edges.append(x+1)
             self.edges.append(x)
 
     def get_points_from_buffer(self):
@@ -795,17 +824,7 @@ class GCodeSender:
                     y = self.points[len(self.points) - 1][1]
 
                 if command.find("Z") != -1:
-                    start = command.find("Z") + 1
-                    stop = start
-                    while command[stop].isalpha() is False and stop < len(command) - 1 and command[stop] != ";":
-                        stop += 1
-                    if start == stop:
-                        z = float(command[start])
-                    else:
-                        if stop == len(command) - 1:
-                            z = float(command[start:stop + 1])
-                        else:
-                            z = float(command[start:stop])
+                    z = self.get_z(command)
 
                     if last_motion_mode != "G00" and is_first_zminmax is True:
                         is_first_zminmax = False
@@ -824,6 +843,9 @@ class GCodeSender:
 
                 p = (x, y, z)
                 self.points.append(p)
+
+        self.difZ = self.ZMinMax[1] - self.ZMinMax[0]
+
 
 class CallbackLogHandler(logging.StreamHandler):
     def __init__(self, callback=None):

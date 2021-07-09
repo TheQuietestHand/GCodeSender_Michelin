@@ -568,7 +568,7 @@ class GcodeMachine:
             self.current_feed = self.feed_in_current_line
             
             
-        if self.do_feed_override == True and self.request_feed:
+        if self.do_feed_override == True and self.override_feed:
            
             if self.contains_feed:
                 # strip the original F setting
