@@ -1,8 +1,10 @@
+import datetime
 import os
 import sys
 import serial.tools.list_ports
 import time
 import threading
+import configparser
 
 from PyQt5.QtCore import QTimer
 
@@ -38,7 +40,9 @@ class RuntimeClock(threading.Thread):
                     self.pause_cond.wait()
 
                 self.run_time_sec += 1
+                self.sender.remaining_time -= 1
                 self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
+                self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
                 time.sleep(1)
 
     def pause(self):
@@ -53,6 +57,7 @@ class RuntimeClock(threading.Thread):
     def reset(self):
         self.paused = True
         self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(0)))
+        self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(0)))
         self.run_time_sec = -1
 
 
@@ -60,6 +65,20 @@ class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+
+        # Some flags
+        self.is_file_load = False
+        self.is_polling_on = False
+        self.is_incremental_streaming = True
+        self.is_first_run = True
+        self.is_rt_feed_rate_on = False
+        self.is_simple_take_feed_min = False
+        self.is_simple_take_feed_max = False
+        self.last_distance_mode = None
+        self.save_logs_to_file = False
+
+        # Logs file name
+        self.logs = "Logs file - " + str(datetime.datetime.now()).replace(':', "") + ".txt"
 
         # Logs list view model init
         self.logs_model = QtGui.QStandardItemModel()
@@ -89,6 +108,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.run_time_clock = RuntimeClock(self.labelRuntimeVar, self.labelLastStateVar.text())
         self.last_state_checker = threading.Thread(target=self.check_state)
 
+        # Settings from config file init
+        try:
+            config = configparser.ConfigParser()
+            config.read("config.ini")
+            self.save_logs_to_file = config["SENDER"].getbool("SaveLogs")
+            self.is_incremental_streaming = config["SENDER"].getbool("IncrementalStreaming")
+            self.is_polling_on = config["SENDER"].getbool("Polling")
+        except:
+            pass
+
         # Sender init
         self.sender = GCodeSender(self.callback)
         self.sender.setup_log_handler()
@@ -96,20 +125,10 @@ class Window(QMainWindow, Ui_MainWindow):
         # Connecting signal slots
         self.connect_signals_slots()
 
-        # Some flags
-        self.is_file_load = False
-        self.is_polling_on = False
-        self.is_incremental_streaming = True
-        self.is_first_run = True
-        self.is_rt_feed_rate_on = False
-        self.is_simple_take_feed_min = False
-        self.is_simple_take_feed_max = False
-        self.last_distance_mode = None
-
     def connect_signals_slots(self):
         # Menu bar
         self.actionLoad.triggered.connect(self.load_file)
-        self.actionExit.triggered.connect(self.close)
+        self.actionExit.triggered.connect(self.closeEvent)
         self.actionGeneral.triggered.connect(self.general)
         self.actionFeed_rate.triggered.connect(self.feed_rate)
         self.actionFiltering.triggered.connect(self.filtering)
@@ -179,12 +198,18 @@ class Window(QMainWindow, Ui_MainWindow):
         self.spinBoxStartFrom.setMaximum(self.sender.buffer_size)
 
         self.spinBoxDoTo.setEnabled(True)
+        self.spinBoxDoTo.setMaximum(self.sender.buffer_size)
         self.spinBoxDoTo.setValue(self.sender.buffer_size)
         self.spinBoxDoTo.setMinimum(1)
-        self.spinBoxDoTo.setMaximum(self.sender.buffer_size)
 
         self.is_file_load = True
         self.prepare_to_streaming()
+
+        if self.is_first_run is False:
+            self.run_time_clock.reset()
+
+        self.sender.calculate_remaining_time()
+        self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
 
         self.openGL.initGeometry(self.sender.points, self.sender.edges)
 
@@ -281,8 +306,10 @@ class Window(QMainWindow, Ui_MainWindow):
             self.is_first_run = False
 
     def general(self):
-        dialog_general = DialogGeneral(self, self.sender, self.is_incremental_streaming)
+        dialog_general = DialogGeneral(self, self.sender, self.is_incremental_streaming, self.save_logs_to_file)
         dialog_general.exec()
+        self.is_incremental_streaming = dialog_general.is_incremental_streaming
+        self.save_logs_to_file = dialog_general.save_logs_to_file
 
     def feed_rate(self):
         dialog_feed_rate = DialogFeedRate(self, self.sender, self.is_file_load, self.is_rt_feed_rate_on,
@@ -325,11 +352,10 @@ class Window(QMainWindow, Ui_MainWindow):
             self.doubleSpinBoxStep.setEnabled(True)
             self.checkBoxG90Step.setEnabled(True)
 
+            self.sender.incremental_streaming = self.is_incremental_streaming
+
             if self.is_polling_on:
                 self.sender.poll_start()
-
-            if self.is_first_run is False:
-                self.run_time_clock.reset()
 
     def connect(self):
         dialog_connect = DialogConnect(self, self.sender)
@@ -345,7 +371,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
             self.prepare_to_streaming()
 
-        self.sender.incremental_streaming = self.is_incremental_streaming
         self.labelLastStateVar.setText("Idle")
 
     def disconnect(self):
@@ -362,10 +387,16 @@ class Window(QMainWindow, Ui_MainWindow):
     def set_starting_line(self):
         self.sender.starting_line = self.spinBoxStartFrom.value()
         self.spinBoxDoTo.setMinimum(self.spinBoxStartFrom.value())
+        self.sender.calculate_buffer_travel_distance()
+        self.sender.calculate_remaining_time()
+        self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
 
     def set_ending_line(self):
         self.sender.ending_line = self.spinBoxDoTo.value()
         self.spinBoxStartFrom.setMaximum(self.spinBoxDoTo.value())
+        self.sender.calculate_buffer_travel_distance()
+        self.sender.calculate_remaining_time()
+        self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
 
     def set_buttons_disabled(self):
         self.pushButtonRunCode.setEnabled(False)
@@ -433,6 +464,10 @@ class Window(QMainWindow, Ui_MainWindow):
         item = QtGui.QStandardItem(log)
         self.logs_model.appendRow(item)
 
+        if self.save_logs_to_file is True:
+            with open(self.logs, 'a') as f:
+                f.writelines(log + "\n")
+
     def check_state(self):
         is_running = True
         while True:
@@ -442,6 +477,14 @@ class Window(QMainWindow, Ui_MainWindow):
             elif self.labelLastStateVar.text() == "Run" and is_running is False:
                 self.run_time_clock.resume()
                 is_running = True
+
+    def closeEvent(self, event):
+        config = configparser.ConfigParser()
+        config['SENDER'] = {'SaveLogs': str(self.save_logs_to_file),
+                             'IncrementalStreaming': str(self.is_incremental_streaming),
+                             'Polling': str(self.is_polling_on)}
+        with open("config.ini", 'w') as configfile:
+            config.write(configfile)
 
 
 class DialogFeedRate(QDialog, Ui_DialogFeedRate):
@@ -467,7 +510,7 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
         self.checkBoxEnableFeedRateCalculator.stateChanged.connect(self.feed_rate_calculator)
         self.checkBoxTakeMinFeed.stateChanged.connect(self.take_min_feed)
         self.checkBoxTakeMaxFeed.stateChanged.connect(self.take_max_feed)
-        self.pushButton.clicked.connect(self.closing_dialog)
+        self.pushButtonOk.clicked.connect(self.closeEvent)
 
     def feed_rate_calculator(self):
         self.simple()
@@ -512,7 +555,7 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
             self.spinBoxMaxFeed.setEnabled(False)
             self.spinBoxMinFeed.setEnabled(False)
 
-    def closing_dialog(self):
+    def closeEvent(self, event):
         if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() <= 0:
             self.sender.preprocessor.do_feed_override = False
             if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() < 0:
@@ -526,25 +569,36 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
 
 
 class DialogGeneral(QDialog, Ui_DialogGeneral):
-    def __init__(self, parent=None, sender=None, is_incremental_streaming=True):
+    def __init__(self, parent=None, sender=None, is_incremental_streaming=True, save_logs_to_file=False):
         super().__init__(parent)
         self.setupUi(self)
         self.is_incremental_streaming = is_incremental_streaming
+        self.save_logs_to_file = save_logs_to_file
         self.sender = sender
         if self.is_incremental_streaming:
             self.checkBoxAgresivePreload.setChecked(False)
         else:
             self.checkBoxAgresivePreload.setChecked(True)
+
+        if self.save_logs_to_file:
+            self.checkBoxWriteLogs.setChecked(True)
+        else:
+            self.checkBoxWriteLogs.setChecked(False)
         self.connect_signals_slots()
 
     def connect_signals_slots(self):
-        self.pushButtonOk.clicked.connect(self.closing_dialog)
+        self.pushButtonOk.clicked.connect(self.closeEvent)
 
-    def closing_dialog(self):
+    def closeEvent(self, event):
         if self.checkBoxAgresivePreload.isChecked():
             self.is_incremental_streaming = False
         else:
             self.is_incremental_streaming = True
+
+        if self.checkBoxWriteLogs.isChecked():
+            self.save_logs_to_file = True
+        else:
+            self.save_logs_to_file = False
 
         self.sender.incremental_streaming = self.is_incremental_streaming
 
@@ -580,10 +634,10 @@ class DialogDisplay(QDialog, Ui_DialogDisplay):
         self.connect_signals_slots()
 
     def connect_signals_slots(self):
-        self.pushButtonOk.clicked.connect(self.closing_dialog)
         self.checkBoxEnablePositionRequest.clicked.connect(self.onof_spin_box)
+        self.pushButtonOk.clicked.connect(self.closeEvent)
 
-    def closing_dialog(self):
+    def closeEvent(self, event):
         if self.checkBoxEnablePositionRequest.isChecked():
             self.doubleSpinBoxRequestFrequency.setEnabled(True)
             self.sender.poll_start()

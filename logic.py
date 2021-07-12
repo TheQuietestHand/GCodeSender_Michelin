@@ -3,6 +3,9 @@ import time
 import re
 import threading
 import atexit
+
+import numpy.linalg
+
 from gcode_machine.gcode_machine import GcodeMachine
 from connection_interface import Interface
 
@@ -38,7 +41,7 @@ class GCodeSender:
             "0",  # spindle state
             "5",  # coolant state
             "0",  # tool number
-            "99",  # current feed
+            "100",  # current feed
             "0",  # spindle speed
         ]
 
@@ -83,10 +86,10 @@ class GCodeSender:
         self.preprocessor.callback = self._preprocessor_callback
 
         # The total distance of all G-Codes in the buffer.
-        self.travel_distance_buffer = {}
+        self.travel_distance_buffer = 0.0
 
         # The currently travelled distance.
-        self.travel_distance_current = {}
+        self.travel_distance_current = 0.0
 
         self.is_standstill = False
 
@@ -103,6 +106,9 @@ class GCodeSender:
 
         self._starting_line = 0
         self._ending_line = 0
+        self.is_motion_line = []
+        self.motion_line_nr = 0
+
         self._current_line = ""
         self._current_line_sent = True
         self._streaming_mode = None
@@ -155,7 +161,10 @@ class GCodeSender:
         self.difF = 0
 
         self.last_motion_mode = None
-        self.rt_feed_mode = None
+        self.last_position = None
+        self.current_position = None
+
+        self.remaining_time = 0.0
 
     @property
     def current_line_number(self):
@@ -224,6 +233,10 @@ class GCodeSender:
         except:
             pass
 
+        self.get_points_from_buffer()
+        self.get_edges()
+        self.calculate_buffer_travel_distance()
+
     def _load_file_into_buffer(self, file):
         lines = file.split("\n")
 
@@ -245,12 +258,9 @@ class GCodeSender:
 
                 self.preprocessor.done()
 
+        self.ending_line = self.buffer_size
         self._callback("Buffer size change", self.buffer_size)
         self._callback("Vars change", self.preprocessor.vars)
-        self.points.clear()
-        self.edges.clear()
-        self.get_points_from_buffer()
-        self.get_edges()
 
     def connect(self, port=None, baudrate=115200):
         if port is None or port.strip() == "":
@@ -299,7 +309,7 @@ class GCodeSender:
 
         self.current_line_number = self._starting_line
 
-        self.travel_distance_current = {}
+        self.travel_distance_current = 0.0
 
         self._set_streaming_src_ends(False)
         self._set_streaming_complete(False)
@@ -312,6 +322,7 @@ class GCodeSender:
         del self.buffer[:]
         self.buffer_size = 0
         self._current_line_nr = 0
+        self.motion_line_nr = 0
         self._callback("Line number change", 0)
         self._callback("Buffer size change", 0)
         self._set_streaming_complete(True)
@@ -320,9 +331,14 @@ class GCodeSender:
         self._error = False
         self._current_line = ""
         self._current_line_sent = True
-        self.travel_distance_buffer = {}
-        self.travel_distance_current = {}
+        self.travel_distance_buffer = 0.0
+        self.travel_distance_current = 0.0
+        self.starting_line = 0
+        self.ending_line = 0
         self.last_motion_mode = None
+        self.points.clear()
+        self.edges.clear()
+        self.is_motion_line.clear()
 
     def view_settings(self):
         if self.is_connected() is True:
@@ -425,7 +441,7 @@ class GCodeSender:
                     self._set_streaming_complete(True)
                     self._set_streaming_src_ends(True)
 
-                elif "Grbl " in line:
+                elif "Grbl" in line:
                     self._callback("Read", line)
                     self._on_boot_up()
                     self.view_hash_state = True
@@ -605,6 +621,17 @@ class GCodeSender:
 
         if self._incremental_streaming:
             self._set_next_line()
+
+            if self.is_motion_line[self._current_line_nr] is True:
+                if self.last_position is not None:
+                    self.travel_distance_current += numpy.linalg.norm(self.last_position - self.current_position)
+                    self.calculate_remaining_time()
+                self.last_position = self.current_position
+                self.current_position = numpy.array((self.points[self.motion_line_nr][0],
+                                                     self.points[self.motion_line_nr][1],
+                                                     self.points[self.motion_line_nr][2]))
+                self.motion_line_nr += 1
+
             if self._streaming_src_ends is False:
                 self._send_current_line()
             else:
@@ -667,6 +694,32 @@ class GCodeSender:
         if self._interface:
             self._callback("Writing", line)
             self._interface.write(line)
+
+    def calculate_remaining_time(self):
+        self.remaining_time = ((self.travel_distance_buffer - self.travel_distance_current) / float(self.gps[10])) * 60
+
+    def calculate_buffer_travel_distance(self):
+        if self.starting_line == 1 and self.ending_line == self.buffer_size:
+            for x in range(0, len(self.points) - 2):
+                a = numpy.array((self.points[x][0], self.points[x][1], self.points[x][2]))
+                b = numpy.array((self.points[x + 1][0], self.points[x + 1][1], self.points[x + 1][2]))
+                self.travel_distance_buffer += numpy.linalg.norm(a - b)
+        else:
+            self.travel_distance_buffer = 0.0
+            motion_line_nr = self.is_motion_line[0:self.starting_line-1].count(True)
+            self.motion_line_nr = motion_line_nr
+            for x in range(self.starting_line - 1, self.ending_line - 1):
+                if self.is_motion_line[x] is True:
+                    a = numpy.array((self.points[motion_line_nr][0], self.points[motion_line_nr][1],
+                                     self.points[motion_line_nr][2]))
+                    while x+1 < len(self.is_motion_line) and self.is_motion_line[x+1] is False:
+                        x += 1
+                    if x+1 == len(self.is_motion_line) and self.is_motion_line[x] is False:
+                        break
+                    b = numpy.array((self.points[motion_line_nr+1][0], self.points[motion_line_nr+1][1],
+                                     self.points[motion_line_nr+1][2]))
+                    motion_line_nr += 1
+                    self.travel_distance_buffer += numpy.linalg.norm(a - b)
 
     def calculate_feed_rate(self, line):
         z = self.get_z(line)
@@ -843,6 +896,9 @@ class GCodeSender:
 
                 p = (x, y, z)
                 self.points.append(p)
+                self.is_motion_line.append(True)
+            else:
+                self.is_motion_line.append(False)
 
         self.difZ = self.ZMinMax[1] - self.ZMinMax[0]
 
