@@ -25,12 +25,14 @@ from logic import GCodeSender
 
 
 class RuntimeClock(threading.Thread):
-    def __init__(self, labelRuntimeVar=None, last_state=None):
+    def __init__(self, labelRuntimeVar=None, labelRemainingTimeVar=None, sender=None, last_state=None):
         threading.Thread.__init__(self)
         self.paused = False
         self.pause_cond = threading.Condition(threading.Lock())
         self.run_time_sec = -1
+        self.sender = sender
         self.labelRuntimeVar = labelRuntimeVar
+        self.labelRemainingTimeVar = labelRemainingTimeVar
         self.last_state = last_state
 
     def run(self):
@@ -105,7 +107,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.openGL_timer.start()
 
         # Runtime clock init
-        self.run_time_clock = RuntimeClock(self.labelRuntimeVar, self.labelLastStateVar.text())
+        self.run_time_clock = RuntimeClock(self.labelRuntimeVar, self.labelRemainingTimeVar, self.sender,
+                                           self.labelLastStateVar.text())
         self.last_state_checker = threading.Thread(target=self.check_state)
 
         # Settings from config file init
@@ -210,6 +213,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.sender.calculate_remaining_time()
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
+        self.labelQueuedCommandsVar.setText(str(self.sender.buffer_size))
 
         self.openGL.initGeometry(self.sender.points, self.sender.edges)
 
@@ -296,6 +300,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.pushButtonPause.setEnabled(True)
         self.pushButtonStop.setEnabled(True)
         self.pushButtonRunCode.setEnabled(False)
+        self.spinBoxStartFrom.setEnabled(False)
+        self.spinBoxDoTo.setEnabled(False)
 
         self.sender.job_run()
         self.labelLastStateVar.setText("Run")
@@ -390,6 +396,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.calculate_buffer_travel_distance()
         self.sender.calculate_remaining_time()
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
+        self.labelQueuedCommandsVar.setText(str(self.sender.ending_line - self.sender.starting_line + 1))
 
     def set_ending_line(self):
         self.sender.ending_line = self.spinBoxDoTo.value()
@@ -397,6 +404,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.calculate_buffer_travel_distance()
         self.sender.calculate_remaining_time()
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
+        self.labelQueuedCommandsVar.setText(str(self.sender.ending_line - self.sender.starting_line + 1))
 
     def set_buttons_disabled(self):
         self.pushButtonRunCode.setEnabled(False)
@@ -435,6 +443,10 @@ class Window(QMainWindow, Ui_MainWindow):
         args = []
         for d in data:
             args.append(str(d))
+
+        if eventstring == "Q":
+            self.labelQueuedCommandsVar.setText(args[0])
+            return
 
         if eventstring == "Gcode parser state update":
             self.last_distance_mode = d[4]
@@ -510,7 +522,7 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
         self.checkBoxEnableFeedRateCalculator.stateChanged.connect(self.feed_rate_calculator)
         self.checkBoxTakeMinFeed.stateChanged.connect(self.take_min_feed)
         self.checkBoxTakeMaxFeed.stateChanged.connect(self.take_max_feed)
-        self.pushButtonOk.clicked.connect(self.closeEvent)
+        self.pushButton.clicked.connect(self.closeEvent)
 
     def feed_rate_calculator(self):
         self.simple()

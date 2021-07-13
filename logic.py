@@ -102,7 +102,6 @@ class GCodeSender:
         self._rx_buffer_fill = []
         self._rx_buffer_backlog = []
         self._rx_buffer_backlog_line_number = []
-        self._rx_buffer_fill_percent = 0
 
         self._starting_line = 0
         self._ending_line = 0
@@ -165,6 +164,7 @@ class GCodeSender:
         self.current_position = None
 
         self.remaining_time = 0.0
+        self.force_send_command_nr = 0
 
     @property
     def current_line_number(self):
@@ -323,6 +323,7 @@ class GCodeSender:
         self.buffer_size = 0
         self._current_line_nr = 0
         self.motion_line_nr = 0
+        self.force_send_command_nr = 0
         self._callback("Line number change", 0)
         self._callback("Buffer size change", 0)
         self._set_streaming_complete(True)
@@ -531,6 +532,10 @@ class GCodeSender:
             self.logger.error("Could not parse gcode parser report: '{}'".format(line))
 
     def _handle_ok(self):
+        if self.incremental_streaming is False:
+            self.force_send_command_nr += 1
+            queued_commands = self.ending_line - self.starting_line + 1 - self.force_send_command_nr
+            self._callback("Q", queued_commands)
         if self._streaming_complete is False:
             self._rx_buffer_fill_pop()
             if not (self._wait_empty_buffer and len(self._rx_buffer_fill) > 0):
@@ -555,8 +560,6 @@ class GCodeSender:
         self._clear_queue()
         self.is_standstill = False
         self.preprocessor.reset()
-        self._callback("Progress as a percentage", 0)
-        self._callback("Rx buffer as a percentage", 0)
 
     def _clear_queue(self):
         try:
@@ -728,8 +731,9 @@ class GCodeSender:
         self.preprocessor.request_feed = self.FMinMax[0] + (self.difF * float(x_percent / 100))
 
     def _set_next_line(self, send_comments=False):
-        progress_percent = int(100 * self._current_line_nr / self.buffer_size)
-        self._callback("Progress as a percentage", progress_percent)
+        if self.incremental_streaming:
+            queued_commands = self.ending_line - self._current_line_nr + 1
+            self._callback("Q", queued_commands)
 
         if self._current_line_nr < self.buffer_size:
             line = self.buffer[self._current_line_nr].strip()
