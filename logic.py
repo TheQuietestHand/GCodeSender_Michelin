@@ -152,6 +152,7 @@ class GCodeSender:
 
         self.points = []
         self.edges = []
+        self.colors = []
 
         self.ZMinMax = [0.0, 0.0]
         self.difZ = 0.0
@@ -846,6 +847,11 @@ class GCodeSender:
                     self.FMinMax[1] = f
 
             if command.find("X") != -1 or command.find("Y") != -1 or command.find("Z") != -1:
+                if last_motion_mode == "G00":
+                    self.colors.append((0.25, 1.0, 0.0))
+                elif last_motion_mode != "G00":
+                    self.colors.append((1.0, 1.0, 1.0))
+
                 if command.find("X") != -1:
                     start = command.find("X") + 1
                     stop = start

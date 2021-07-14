@@ -100,7 +100,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # OpenGL widget init
         self.openGL = MyOpenGlWidget(parent=self.frameGL)
         self.openGL.setGeometry(0, 0, 0, 0)
-        self.openGL.resize(985, 627)
+        self.openGL.resize(1051, 821)
         self.openGL_timer = QTimer(self)
         self.openGL_timer.setInterval(20)
         self.openGL_timer.timeout.connect(self.openGL.updateGL)
@@ -167,11 +167,6 @@ class Window(QMainWindow, Ui_MainWindow):
         # Console
         self.pushButtonSendCode.clicked.connect(self.send_code_manual)
 
-        # Visualisation
-        self.horizontalSliderVisualisationX.valueChanged.connect(self.set_openGL_rotate_X)
-        self.horizontalSliderVisualisationY.valueChanged.connect(self.set_openGL_rotate_Y)
-        self.horizontalSliderVisualisationZ.valueChanged.connect(self.set_openGL_rotate_Z)
-
     def load_file(self):
         self.code_model.clear()
 
@@ -215,7 +210,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
         self.labelQueuedCommandsVar.setText(str(self.sender.buffer_size))
 
-        self.openGL.initGeometry(self.sender.points, self.sender.edges)
+        self.openGL.initGeometry(self.sender.points, self.sender.edges, self.sender.colors)
 
     def manual_X_plus(self):
         if self.last_distance_mode == "G91":
@@ -429,15 +424,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.pushButtonSendCode.setEnabled(False)
         self.lineEditCodeToSend.setEnabled(False)
-
-    def set_openGL_rotate_X(self):
-        self.openGL.rotX = self.horizontalSliderVisualisationX.value()
-
-    def set_openGL_rotate_Y(self):
-        self.openGL.rotY = self.horizontalSliderVisualisationY.value()
-
-    def set_openGL_rotate_Z(self):
-        self.openGL.rotZ = self.horizontalSliderVisualisationZ.value()
 
     def callback(self, eventstring, *data):
         args = []
