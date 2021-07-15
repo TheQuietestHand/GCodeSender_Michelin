@@ -151,13 +151,20 @@ class GCodeSender:
         self._callback("Gcode parser state update", self.gps)
 
         self.points = []
+        self.cube_points = []
         self.edges = []
+        self.cube_edges = []
         self.colors = []
+        self.cube_colors = []
 
-        self.ZMinMax = [0.0, 0.0]
+        self.XMinMax = []
+        self.YMinMax = []
+        self.ZMinMax = []
+        self.difX = 0.0
+        self.difY = 0.0
         self.difZ = 0.0
-        self.FMinMax = [0, 0]
-        self.FMinMaxUser = [0, 0]
+
+        self.FMinMax = []
         self.difF = 0
 
         self.last_motion_mode = None
@@ -236,6 +243,7 @@ class GCodeSender:
 
         self.get_points_from_buffer()
         self.get_edges()
+        self.get_cube()
         self.calculate_buffer_travel_distance()
 
     def _load_file_into_buffer(self, file):
@@ -339,8 +347,20 @@ class GCodeSender:
         self.ending_line = 0
         self.last_motion_mode = None
         self.points.clear()
+        self.cube_points.clear()
         self.edges.clear()
+        self.cube_edges.clear()
+        self.colors.clear()
+        self.cube_colors.clear()
         self.is_motion_line.clear()
+        self.XMinMax.clear()
+        self.YMinMax.clear()
+        self.ZMinMax.clear()
+        self.FMinMax.clear()
+        self.difX = 0.0
+        self.difY = 0.0
+        self.difZ = 0.0
+        self.difF = 0.0
 
     def view_settings(self):
         if self.is_connected() is True:
@@ -814,9 +834,33 @@ class GCodeSender:
             self.edges.append(x+1)
             self.edges.append(x)
 
+    def get_cube(self):
+        self.cube_points = [(self.XMinMax[0], self.YMinMax[0], self.ZMinMax[0]),
+                            (self.XMinMax[1], self.YMinMax[0], self.ZMinMax[0]),
+                            (self.XMinMax[1], self.YMinMax[0], self.ZMinMax[1]),
+                            (self.XMinMax[0], self.YMinMax[0], self.ZMinMax[1]),
+                            (self.XMinMax[0], self.YMinMax[1], self.ZMinMax[0]),
+                            (self.XMinMax[1], self.YMinMax[1], self.ZMinMax[0]),
+                            (self.XMinMax[1], self.YMinMax[1], self.ZMinMax[1]),
+                            (self.XMinMax[0], self.YMinMax[1], self.ZMinMax[1])]
+
+        self.cube_edges = [0, 1, 2, 3,
+                        3, 2, 6, 7,
+                        1, 0, 4, 5,
+                        2, 1, 5, 6,
+                        0, 3, 7, 4,
+                        7, 6, 5, 4]
+
+        self.cube_colors = [(1.0, 1.0, 1.0),
+                            (1.0, 1.0, 1.0),
+                            (1.0, 1.0, 1.0),
+                            (1.0, 1.0, 1.0),
+                            (1.0, 1.0, 1.0),
+                            (1.0, 1.0, 1.0),
+                            (1.0, 1.0, 1.0),
+                            (1.0, 1.0, 1.0)]
+
     def get_points_from_buffer(self):
-        is_first_zminmax = True
-        is_first_fminmax = True
         last_motion_mode = None
 
         for command in self.buffer:
@@ -837,10 +881,9 @@ class GCodeSender:
                     else:
                         f = int(command[start:stop])
 
-                if is_first_fminmax is True:
-                    is_first_fminmax = False
-                    self.FMinMax[0] = f
-                    self.FMinMax[1] = f
+                if len(self.FMinMax) < 2:
+                    self.FMinMax.append(f)
+                    self.FMinMax.append(f)
                 elif f < self.FMinMax[0]:
                     self.FMinMax[0] = f
                 elif f > self.FMinMax[1]:
@@ -848,9 +891,9 @@ class GCodeSender:
 
             if command.find("X") != -1 or command.find("Y") != -1 or command.find("Z") != -1:
                 if last_motion_mode == "G00":
-                    self.colors.append((0.25, 1.0, 0.0))
+                    self.colors.append((131.0/255.0, 224.0/255.0, 30.0/255.0))
                 elif last_motion_mode != "G00":
-                    self.colors.append((1.0, 1.0, 1.0))
+                    self.colors.append((255.0/255.0, 10.0/255.0, 50.0/255.0))
 
                 if command.find("X") != -1:
                     start = command.find("X") + 1
@@ -864,6 +907,15 @@ class GCodeSender:
                             x = float(command[start:stop + 1])
                         else:
                             x = float(command[start:stop])
+
+                        if last_motion_mode != "G00" and len(self.XMinMax) < 2:
+                            self.XMinMax.append(x)
+                            self.XMinMax.append(x)
+                        elif last_motion_mode != "G00" and x < self.XMinMax[0]:
+                            self.XMinMax[0] = x
+                        elif last_motion_mode != "G00" and x > self.XMinMax[1]:
+                            self.XMinMax[1] = x
+
                 elif len(self.points) == 0:
                     x = 0
                 else:
@@ -881,6 +933,15 @@ class GCodeSender:
                             y = float(command[start:stop + 1])
                         else:
                             y = float(command[start:stop])
+
+                    if last_motion_mode != "G00" and len(self.YMinMax) < 2:
+                        self.YMinMax.append(y)
+                        self.YMinMax.append(y)
+                    elif last_motion_mode != "G00" and y < self.YMinMax[0]:
+                        self.YMinMax[0] = y
+                    elif last_motion_mode != "G00" and y > self.YMinMax[1]:
+                        self.YMinMax[1] = y
+
                 elif len(self.points) == 0:
                     y = 0
                 else:
@@ -889,15 +950,13 @@ class GCodeSender:
                 if command.find("Z") != -1:
                     z = self.get_z(command)
 
-                    if last_motion_mode != "G00" and is_first_zminmax is True:
-                        is_first_zminmax = False
+                    if last_motion_mode != "G00" and len(self.ZMinMax) < 2:
+                        self.ZMinMax.append(z)
+                        self.ZMinMax.append(z)
+                    elif last_motion_mode != "G00" and z < self.ZMinMax[0]:
                         self.ZMinMax[0] = z
+                    elif last_motion_mode != "G00" and z > self.ZMinMax[1]:
                         self.ZMinMax[1] = z
-                    elif last_motion_mode != "G00":
-                        if z < self.ZMinMax[0]:
-                            self.ZMinMax[0] = z
-                        elif z > self.ZMinMax[1]:
-                            self.ZMinMax[1] = z
 
                 elif len(self.points) == 0:
                     z = 0
@@ -910,6 +969,8 @@ class GCodeSender:
             else:
                 self.is_motion_line.append(False)
 
+        self.difX = self.XMinMax[1] - self.XMinMax[0]
+        self.difY = self.YMinMax[1] - self.YMinMax[0]
         self.difZ = self.ZMinMax[1] - self.ZMinMax[0]
 
 

@@ -100,10 +100,10 @@ class Window(QMainWindow, Ui_MainWindow):
         # OpenGL widget init
         self.openGL = MyOpenGlWidget(parent=self.frameGL)
         self.openGL.setGeometry(0, 0, 0, 0)
-        self.openGL.resize(1051, 821)
+        self.openGL.resize(1, 1)
         self.openGL_timer = QTimer(self)
         self.openGL_timer.setInterval(20)
-        self.openGL_timer.timeout.connect(self.openGL.updateGL)
+        self.openGL_timer.timeout.connect(self.updateGL)
         self.openGL_timer.start()
 
         # Runtime clock init
@@ -167,6 +167,12 @@ class Window(QMainWindow, Ui_MainWindow):
         # Console
         self.pushButtonSendCode.clicked.connect(self.send_code_manual)
 
+    def updateGL(self):
+        size = self.frameGL.size()
+        self.openGL.resize(size.width(), size.height())
+        self.openGL.resizeGL(size.width(), size.height())
+        self.openGL.updateGL()
+
     def load_file(self):
         self.code_model.clear()
 
@@ -209,8 +215,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.calculate_remaining_time()
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
         self.labelQueuedCommandsVar.setText(str(self.sender.buffer_size))
-
-        self.openGL.initGeometry(self.sender.points, self.sender.edges, self.sender.colors)
 
     def manual_X_plus(self):
         if self.last_distance_mode == "G91":
@@ -392,6 +396,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.calculate_remaining_time()
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
         self.labelQueuedCommandsVar.setText(str(self.sender.ending_line - self.sender.starting_line + 1))
+        self.openGL.initGeometry(self.sender.points[self.spinBoxStartFrom.value() - 1: self.spinBoxDoTo.value() + 1],
+                                 self.sender.edges[(self.spinBoxStartFrom.value() * 4): (self.spinBoxDoTo.value() * 4)],
+                                 self.sender.colors[self.spinBoxStartFrom.value() - 1: self.spinBoxDoTo.value() + 1],
+                                 self.sender.cube_points, self.sender.cube_edges, self.sender.cube_colors,
+                                 self.sender.XMinMax[0] - self.sender.XMinMax[1],
+                                 self.sender.YMinMax[0] - self.sender.YMinMax[1],
+                                 self.sender.ZMinMax[0] - self.sender.ZMinMax[1])
 
     def set_ending_line(self):
         self.sender.ending_line = self.spinBoxDoTo.value()
@@ -400,6 +411,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.calculate_remaining_time()
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
         self.labelQueuedCommandsVar.setText(str(self.sender.ending_line - self.sender.starting_line + 1))
+        self.openGL.initGeometry(self.sender.points[self.spinBoxStartFrom.value() - 1: self.spinBoxDoTo.value() + 1],
+                                 self.sender.edges[(self.spinBoxStartFrom.value() * 4): (self.spinBoxDoTo.value() * 4)],
+                                 self.sender.colors[self.spinBoxStartFrom.value() - 1: self.spinBoxDoTo.value() + 1],
+                                 self.sender.cube_points, self.sender.cube_edges, self.sender.cube_colors,
+                                 self.sender.XMinMax[0] - self.sender.XMinMax[1],
+                                 self.sender.YMinMax[0] - self.sender.YMinMax[1],
+                                 self.sender.ZMinMax[0] - self.sender.ZMinMax[1])
 
     def set_buttons_disabled(self):
         self.pushButtonRunCode.setEnabled(False)
@@ -561,8 +579,6 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
                 self.spinBoxMinFeed.setValue(1)
         else:
             self.sender.difF = self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value()
-            self.sender.FMinMaxUser[0] = self.spinBoxMinFeed.value()
-            self.sender.FMinMaxUser[1] = self.spinBoxMaxFeed.value()
             self.sender.preprocessor.do_feed_override = self.is_rt_feed_rate_on
 
 

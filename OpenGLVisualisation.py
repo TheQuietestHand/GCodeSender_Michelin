@@ -9,27 +9,44 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
     def __init__(self, parent=None):
         QtOpenGL.QGLWidget.__init__(self, parent)
 
-    def initGeometry(self, points=None, edges=None, colors=None):
+    def initGeometry(self, points=None, edges=None, colors=None, cube_points=None, cube_edges=None, cube_colors=None,
+                     x=0.0, y=0.0, z=0.0):
         if points is not None and edges is not None and colors is not None:
             self.points = np.array(points)
             self.vertVBO = vbo.VBO(np.reshape(self.points, (1, -1)).astype(np.float32))
-            self.vertVBO.bind()
 
-           # self.colors = np.array(colors)
-           # self.clrVBO = vbo.VBO(np.reshape(self.colors, (1, -1)).astype(np.float32))
-           # self.clrVBO.bind()
+            self.colors = np.array(colors)
+            self.clrVBO = vbo.VBO(np.reshape(self.colors, (1, -1)).astype(np.float32))
 
             self.edges = np.array(edges)
+
+            self.points_cube = np.array(cube_points)
+            self.vertVBOcube = vbo.VBO(np.reshape(self.points_cube, (1, -1)).astype(np.float32))
+
+            self.colors_cube = np.array(cube_colors)
+            self.clrVBOcube = vbo.VBO(np.reshape(self.colors_cube, (1, -1)).astype(np.float32))
+
+            self.edges_cube = np.array(cube_edges)
+
+            self.string = "X: {}mm\nY: {}mm\nZ: {}mm".format(x, y, z)
         else:
             self.points = np.array([])
             self.vertVBO = vbo.VBO(np.reshape(self.points, (1, -1)).astype(np.float32))
-            self.vertVBO.bind()
 
             self.colors = np.array([])
             self.clrVBO = vbo.VBO(np.reshape(self.colors, (1, -1)).astype(np.float32))
-            self.clrVBO.bind()
 
             self.edges = np.array([])
+
+            self.points_cube = np.array([])
+            self.vertVBOcube = vbo.VBO(np.reshape(self.points_cube, (1, -1)).astype(np.float32))
+
+            self.colors_cube = np.array([])
+            self.clrVBOcube = vbo.VBO(np.reshape(self.colors_cube, (1, -1)).astype(np.float32))
+
+            self.edges_cube = np.array([])
+
+            self.string = ""
 
     def initializeGL(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
@@ -58,6 +75,7 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
 
     def paintGL(self, coordinates=None):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glClearColor(43.0/255.0, 62.0/255.0, 70.0/255.0, 1.0)
 
         glPushMatrix()
 
@@ -69,15 +87,26 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
         glTranslate(-0.5, -0.5, -0.5)
 
         glEnableClientState(GL_VERTEX_ARRAY)
-       # glEnableClientState(GL_COLOR_ARRAY)
+        glEnableClientState(GL_COLOR_ARRAY)
 
-        glVertexPointer(3, GL_FLOAT, 0, self.vertVBO)
-       # glColorPointer(3, GL_FLOAT, 0, self.clrVBO)
+        self.vertVBO.bind()
+        glVertexPointer(3, GL_FLOAT, 0, None)
+
+        self.clrVBO.bind()
+        glColorPointer(3, GL_FLOAT, 0, None)
 
         glDrawElements(GL_QUADS, len(self.edges), GL_UNSIGNED_INT, self.edges)
 
+        self.vertVBOcube.bind()
+        glVertexPointer(3, GL_FLOAT, 0, None)
+
+        self.clrVBOcube.bind()
+        glColorPointer(3, GL_FLOAT, 0, None)
+
+        glDrawElements(GL_QUADS, len(self.edges_cube), GL_UNSIGNED_INT, self.edges_cube)
+
         glDisableClientState(GL_VERTEX_ARRAY)
-       # glDisableClientState(GL_COLOR_ARRAY)
+        glDisableClientState(GL_COLOR_ARRAY)
 
         glPopMatrix()
 
