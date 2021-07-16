@@ -105,6 +105,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.openGL_timer.setInterval(20)
         self.openGL_timer.timeout.connect(self.updateGL)
         self.openGL_timer.start()
+        self.render_start_point = 0
+        self.render_end_point = 0
 
         # Runtime clock init
         self.run_time_clock = RuntimeClock(self.labelRuntimeVar, self.labelRemainingTimeVar, self.sender,
@@ -205,6 +207,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.spinBoxDoTo.setMaximum(self.sender.buffer_size)
         self.spinBoxDoTo.setValue(self.sender.buffer_size)
         self.spinBoxDoTo.setMinimum(1)
+
+        self.render_start_point = 0
+        self.render_end_point = len(self.sender.points)
 
         self.is_file_load = True
         self.prepare_to_streaming()
@@ -396,13 +401,19 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.calculate_remaining_time()
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
         self.labelQueuedCommandsVar.setText(str(self.sender.ending_line - self.sender.starting_line + 1))
-        self.openGL.initGeometry(self.sender.points[self.spinBoxStartFrom.value() - 1: self.spinBoxDoTo.value() + 1],
-                                 self.sender.edges[(self.spinBoxStartFrom.value() * 4): (self.spinBoxDoTo.value() * 4)],
-                                 self.sender.colors[self.spinBoxStartFrom.value() - 1: self.spinBoxDoTo.value() + 1],
-                                 self.sender.cube_points, self.sender.cube_edges, self.sender.cube_colors,
-                                 self.sender.XMinMax[0] - self.sender.XMinMax[1],
-                                 self.sender.YMinMax[0] - self.sender.YMinMax[1],
-                                 self.sender.ZMinMax[0] - self.sender.ZMinMax[1])
+        if self.sender.starting_line == 1 and self.sender.ending_line == self.sender.buffer_size:
+            self.render_start_point = 0
+            self.render_end_point = self.sender.buffer_size
+            self.openGL.initGeometry(self.sender.points, self.sender.colors, self.sender.cube_points,
+                                     self.sender.cube_edges, self.sender.cube_colors, self.sender.difX,
+                                     self.sender.difY, self.sender.difZ)
+        else:
+            self.render_start_point = self.spinBoxStartFrom.value() - \
+                                      self.sender.is_motion_line[0:self.spinBoxStartFrom.value()].count(False)
+            self.openGL.initGeometry(self.sender.points[self.render_start_point:self.render_end_point],
+                                     self.sender.colors[self.render_start_point:self.render_end_point],
+                                     self.sender.cube_points, self.sender.cube_edges, self.sender.cube_colors,
+                                     self.sender.difX, self.sender.difY, self.sender.difZ)
 
     def set_ending_line(self):
         self.sender.ending_line = self.spinBoxDoTo.value()
@@ -411,13 +422,20 @@ class Window(QMainWindow, Ui_MainWindow):
         self.sender.calculate_remaining_time()
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
         self.labelQueuedCommandsVar.setText(str(self.sender.ending_line - self.sender.starting_line + 1))
-        self.openGL.initGeometry(self.sender.points[self.spinBoxStartFrom.value() - 1: self.spinBoxDoTo.value() + 1],
-                                 self.sender.edges[(self.spinBoxStartFrom.value() * 4): (self.spinBoxDoTo.value() * 4)],
-                                 self.sender.colors[self.spinBoxStartFrom.value() - 1: self.spinBoxDoTo.value() + 1],
-                                 self.sender.cube_points, self.sender.cube_edges, self.sender.cube_colors,
-                                 self.sender.XMinMax[0] - self.sender.XMinMax[1],
-                                 self.sender.YMinMax[0] - self.sender.YMinMax[1],
-                                 self.sender.ZMinMax[0] - self.sender.ZMinMax[1])
+        if self.sender.starting_line == 1 and self.sender.ending_line == self.sender.buffer_size:
+            self.render_start_point = 0
+            self.render_end_point = self.sender.buffer_size
+            self.openGL.initGeometry(self.sender.points, self.sender.colors, self.sender.cube_points,
+                                     self.sender.cube_edges, self.sender.cube_colors, self.sender.difX,
+                                     self.sender.difY, self.sender.difZ)
+        else:
+            self.render_end_point = self.spinBoxDoTo.value() - \
+                                      self.sender.is_motion_line[self.spinBoxStartFrom.value() - 1:
+                                                                 self.spinBoxDoTo.value()].count(False)
+            self.openGL.initGeometry(self.sender.points[self.render_start_point:self.render_end_point],
+                                     self.sender.colors[self.render_start_point:self.render_end_point],
+                                     self.sender.cube_points, self.sender.cube_edges, self.sender.cube_colors,
+                                     self.sender.difX, self.sender.difY, self.sender.difZ)
 
     def set_buttons_disabled(self):
         self.pushButtonRunCode.setEnabled(False)
@@ -543,6 +561,8 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
             self.is_simple_take_feed_min = True
         else:
             self.is_simple_take_feed_min = False
+            if self.checkBoxEnableFeedRateCalculator.isChecked() is True:
+                self.spinBoxMinFeed.setEnabled(True)
 
     def take_max_feed(self):
         if self.is_file_load is False:
@@ -554,6 +574,8 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
             self.is_simple_take_feed_max = True
         else:
             self.is_simple_take_feed_max = False
+            if self.checkBoxEnableFeedRateCalculator.isChecked() is True:
+                self.spinBoxMaxFeed.setEnabled(True)
 
     def simple(self):
         if self.checkBoxEnableFeedRateCalculator.isChecked() is True:

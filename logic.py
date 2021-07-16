@@ -152,7 +152,6 @@ class GCodeSender:
 
         self.points = []
         self.cube_points = []
-        self.edges = []
         self.cube_edges = []
         self.colors = []
         self.cube_colors = []
@@ -242,9 +241,12 @@ class GCodeSender:
             pass
 
         self.get_points_from_buffer()
-        self.get_edges()
-        self.get_cube()
-        self.calculate_buffer_travel_distance()
+        if len(self.XMinMax) == 2 and len(self.YMinMax) == 2 and len(self.ZMinMax) == 2:
+            self.difX = abs(self.XMinMax[1] - self.XMinMax[0])
+            self.difY = abs(self.YMinMax[1] - self.YMinMax[0])
+            self.difZ = abs(self.ZMinMax[1] - self.ZMinMax[0])
+            self.get_cube()
+            self.calculate_buffer_travel_distance()
 
     def _load_file_into_buffer(self, file):
         lines = file.split("\n")
@@ -348,7 +350,6 @@ class GCodeSender:
         self.last_motion_mode = None
         self.points.clear()
         self.cube_points.clear()
-        self.edges.clear()
         self.cube_edges.clear()
         self.colors.clear()
         self.cube_colors.clear()
@@ -827,13 +828,6 @@ class GCodeSender:
 
         return z
 
-    def get_edges(self):
-        for x in range(0, len(self.points) - 2):
-            self.edges.append(x)
-            self.edges.append(x+1)
-            self.edges.append(x+1)
-            self.edges.append(x)
-
     def get_cube(self):
         self.cube_points = [(self.XMinMax[0], self.YMinMax[0], self.ZMinMax[0]),
                             (self.XMinMax[1], self.YMinMax[0], self.ZMinMax[0]),
@@ -968,10 +962,6 @@ class GCodeSender:
                 self.is_motion_line.append(True)
             else:
                 self.is_motion_line.append(False)
-
-        self.difX = self.XMinMax[1] - self.XMinMax[0]
-        self.difY = self.YMinMax[1] - self.YMinMax[0]
-        self.difZ = self.ZMinMax[1] - self.ZMinMax[0]
 
 
 class CallbackLogHandler(logging.StreamHandler):
