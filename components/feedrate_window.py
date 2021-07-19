@@ -59,6 +59,10 @@ class Ui_DialogFeedRate(object):
         self.spinBoxMaxFeed.setMaximum(9999)
         self.spinBoxMaxFeed.setObjectName("spinBoxMaxFeed")
         self.gridLayout.addWidget(self.spinBoxMaxFeed, 3, 3, 2, 1)
+        self.pushButtonSave = QtWidgets.QPushButton(self.gridLayoutWidget)
+        self.pushButtonSave.setEnabled(False)
+        self.pushButtonSave.setObjectName("pushButtonSave")
+        self.gridLayout.addWidget(self.pushButtonSave, 0, 2, 1, 1)
 
         self.retranslateUi(DialogFeedRate)
         self.pushButton.clicked.connect(DialogFeedRate.accept)
@@ -73,3 +77,4 @@ class Ui_DialogFeedRate(object):
         self.checkBoxTakeMaxFeed.setText(_translate("DialogFeedRate", "Take max feed rate from file"))
         self.labelMinFeed.setText(_translate("DialogFeedRate", "Min feed rate:"))
         self.labelMaxFeed.setText(_translate("DialogFeedRate", "Max feed rate:"))
+        self.pushButtonSave.setText(_translate("DialogFeedRate", "Save"))

@@ -545,6 +545,7 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
         self.checkBoxTakeMinFeed.stateChanged.connect(self.take_min_feed)
         self.checkBoxTakeMaxFeed.stateChanged.connect(self.take_max_feed)
         self.pushButton.clicked.connect(self.closeEvent)
+        self.pushButtonSave.clicked.connect(self.save)
 
     def feed_rate_calculator(self):
         self.simple()
@@ -585,6 +586,7 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
             self.labelMinFeed.setEnabled(True)
             self.spinBoxMaxFeed.setEnabled(True)
             self.spinBoxMinFeed.setEnabled(True)
+            self.pushButtonSave.setEnabled(True)
         else:
             self.checkBoxTakeMaxFeed.setEnabled(False)
             self.checkBoxTakeMinFeed.setEnabled(False)
@@ -592,8 +594,9 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
             self.labelMinFeed.setEnabled(False)
             self.spinBoxMaxFeed.setEnabled(False)
             self.spinBoxMinFeed.setEnabled(False)
+            self.pushButtonSave.setEnabled(False)
 
-    def closeEvent(self, event):
+    def save(self):
         if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() <= 0:
             self.sender.preprocessor.do_feed_override = False
             if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() < 0:
@@ -602,6 +605,38 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
         else:
             self.sender.difF = self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value()
             self.sender.preprocessor.do_feed_override = self.is_rt_feed_rate_on
+
+        file_filter = "NC files (*.nc)|*.nc"
+        response = QFileDialog.getSaveFileName(
+            parent=self,
+            caption="Select a data file",
+            directory='Nowy.nc',
+            filter=file_filter,
+            initialFilter="NC files (*.nc)|*.nc"
+        )
+        self.sender.save_buffer_with_new_feed_rate(response)
+        self.close()
+
+    def closeEvent(self, event, flag=None):
+        if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() <= 0:
+            self.sender.preprocessor.do_feed_override = False
+            if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() < 0:
+                self.spinBoxMaxFeed.setValue(1)
+                self.spinBoxMinFeed.setValue(1)
+        else:
+            self.sender.difF = self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value()
+            self.sender.preprocessor.do_feed_override = self.is_rt_feed_rate_on
+
+        if flag is not None:
+            file_filter = "NC files (*.nc)|*.nc"
+            response = QFileDialog.getSaveFileName(
+                parent=self,
+                caption="Select a data file",
+                directory='Nowy.nc',
+                filter=file_filter,
+                initialFilter="NC files (*.nc)|*.nc"
+            )
+            self.sender.save_buffer_with_new_feed_rate(response)
 
 
 class DialogGeneral(QDialog, Ui_DialogGeneral):

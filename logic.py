@@ -697,6 +697,35 @@ class GCodeSender:
         required_bytes = len(self._current_line) + 1
         return rx_free_bytes >= required_bytes
 
+    def save_buffer_with_new_feed_rate(self, path=None):
+        if self.preprocessor.do_feed_override is True or path is None or self.buffer_size == 0:
+            return
+
+        last_feed_rate = None
+        buffer_with_new_feed_rate = []
+
+        for line in self.buffer:
+            if line.find("G") != -1:
+                last_motion_mode = line[line.find("G"):line.find("G") + 3]
+
+            feed_rate = self.calculate_feed_rate(line)
+            if feed_rate != last_feed_rate and feed_rate is not None and last_motion_mode != "G00":
+                if line.find("F") != -1:
+                    start = line.find("F")
+                    stop = start + 1
+                    while line[stop].isalpha() is False and stop < len(line) - 1 and line[stop] != ";":
+                        stop += 1
+                    if stop == len(line) - 1:
+                        line = line[0:start]
+                    else:
+                        line = line[0:start] + line[stop + 1:len(line)]
+                line += "F" + str(self.calculate_feed_rate(line))
+            buffer_with_new_feed_rate.append(line)
+
+        with open(path[0], 'w') as file:
+            for l in buffer_with_new_feed_rate:
+                file.write(l+"\n")
+
     def _send_current_line(self):
         if self._error:
             self.logger.error("Firmware reported error. Stopping streaming!")
@@ -748,9 +777,12 @@ class GCodeSender:
 
     def calculate_feed_rate(self, line):
         z = self.get_z(line)
-        x = z - self.ZMinMax[0]
-        x_percent = x / self.difZ * 100
-        self.preprocessor.request_feed = self.FMinMax[0] + (self.difF * float(x_percent / 100))
+        if z is not None:
+            x = z - self.ZMinMax[0]
+            x_percent = x / self.difZ * 100
+            return int(self.FMinMax[0] + (self.difF * float(x_percent / 100)))
+        else:
+            return None
 
     def _set_next_line(self, send_comments=False):
         if self.incremental_streaming:
@@ -762,7 +794,7 @@ class GCodeSender:
             if line.find("G") != -1:
                 self.last_motion_mode = line[line.find("G"):line.find("G") + 3]
             if self.preprocessor.do_feed_override is True and self.last_motion_mode != "G00" and line.find("Z") != -1:
-                self.calculate_feed_rate(line)
+                self.preprocessor.request_feed = self.calculate_feed_rate(line)
             self.preprocessor.set_line(line)
             self.preprocessor.substitute_vars()
             self.preprocessor.parse_state()
@@ -781,12 +813,6 @@ class GCodeSender:
 
         else:
             self._set_streaming_src_ends(True)
-
-    def override_feed(self, feed):
-        self.preprocessor.request_feed = float(feed)
-
-    def set_feed_override(self, x):
-        self.preprocessor.do_feed_override = x
 
     def _set_job_finished(self, x):
         self.job_finished = x
@@ -814,19 +840,22 @@ class GCodeSender:
         self._interface.write("?")
 
     def get_z(self, line):
-        start = line.find("Z") + 1
-        stop = start
-        while line[stop].isalpha() is False and stop < len(line) - 1 and line[stop] != ";":
-            stop += 1
-        if start == stop:
-            z = float(line[start])
-        else:
-            if stop == len(line) - 1:
-                z = float(line[start:stop + 1])
+        if line.find("Z") != -1:
+            start = line.find("Z") + 1
+            stop = start
+            while line[stop].isalpha() is False and stop < len(line) - 1 and line[stop] != ";":
+                stop += 1
+            if start == stop:
+                z = float(line[start])
             else:
-                z = float(line[start:stop])
+                if stop == len(line) - 1:
+                    z = float(line[start:stop + 1])
+                else:
+                    z = float(line[start:stop])
 
-        return z
+            return z
+        else:
+            return None
 
     def get_cube(self):
         self.cube_points = [(self.XMinMax[0], self.YMinMax[0], self.ZMinMax[0]),

@@ -88,11 +88,29 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
         glPushMatrix()
 
         glTranslate(0.0, 0.0, -50.0)
-        glScale(0.1 * self.zoomFactor, 0.1 * self.zoomFactor, 0.1 * self.zoomFactor)
+
+        glScale(0.1, 0.1, 0.1)
+        glRotate(0.0, 1.0, 0.0, 0.0)
+        glRotate(0.0, 0.0, 1.0, 0.0)
+        glRotate(0.0, 0.0, 0.0, 1.0)
+
+        glColor3f(1.0, 1.0, 1.0)
+
+        glPushAttrib(GL_VIEWPORT)
+
+        glViewport(0, 0, 50, 50)
+
+        glRasterPos2f(10, 10)
+
+        for i in range(len(self.string)):
+           glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ord(self.string[i]))
+
+        glPopAttrib()
+
+        glScale(1.0 * self.zoomFactor, 1.0 * self.zoomFactor, 1.0 * self.zoomFactor)
         glRotate(self.rotX, 1.0, 0.0, 0.0)
         glRotate(self.rotY, 0.0, 1.0, 0.0)
         glRotate(self.rotZ, 0.0, 0.0, 1.0)
-        glTranslate(-0.5, -0.5, -0.5)
 
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
@@ -112,13 +130,6 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
         glColorPointer(3, GL_FLOAT, 0, None)
 
         glDrawElements(GL_QUADS, len(self.edges_cube), GL_UNSIGNED_INT, self.edges_cube)
-
-        glColor3f(1.0, 1.0, 1.0)
-
-        glRasterPos2f(-200, -150)
-
-        for i in range(len(self.string)):
-            glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ord(self.string[i]))
 
         glDisableClientState(GL_VERTEX_ARRAY)
         glDisableClientState(GL_COLOR_ARRAY)
