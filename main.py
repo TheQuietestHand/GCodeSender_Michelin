@@ -24,45 +24,6 @@ from components.feedrate_window import Ui_DialogFeedRate
 from logic import GCodeSender
 
 
-class RuntimeClock(threading.Thread):
-    def __init__(self, labelRuntimeVar=None, labelRemainingTimeVar=None, sender=None, last_state=None):
-        threading.Thread.__init__(self)
-        self.paused = False
-        self.pause_cond = threading.Condition(threading.Lock())
-        self.run_time_sec = -1
-        self.sender = sender
-        self.labelRuntimeVar = labelRuntimeVar
-        self.labelRemainingTimeVar = labelRemainingTimeVar
-        self.last_state = last_state
-
-    def run(self):
-        while True:
-            with self.pause_cond:
-                while self.paused:
-                    self.pause_cond.wait()
-
-                self.run_time_sec += 1
-                self.sender.remaining_time -= 1
-                self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
-                self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
-                time.sleep(1)
-
-    def pause(self):
-        self.paused = True
-        self.pause_cond.acquire()
-
-    def resume(self):
-        self.paused = False
-        self.pause_cond.notify()
-        self.pause_cond.release()
-
-    def reset(self):
-        self.paused = True
-        self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(0)))
-        self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(0)))
-        self.run_time_sec = -1
-
-
 class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -72,7 +33,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.is_file_load = False
         self.is_polling_on = False
         self.is_incremental_streaming = True
-        self.is_first_run = True
         self.is_rt_feed_rate_on = False
         self.is_simple_take_feed_min = False
         self.is_simple_take_feed_max = False
@@ -108,11 +68,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.render_start_point = 0
         self.render_end_point = 0
 
-        # Runtime clock init
-        self.run_time_clock = RuntimeClock(self.labelRuntimeVar, self.labelRemainingTimeVar, self.sender,
-                                           self.labelLastStateVar.text())
-        self.last_state_checker = threading.Thread(target=self.check_state)
-
         # Settings from config file init
         try:
             config = configparser.ConfigParser()
@@ -126,6 +81,13 @@ class Window(QMainWindow, Ui_MainWindow):
         # Sender init
         self.sender = GCodeSender(self.callback)
         self.sender.setup_log_handler()
+
+        # Runtime clock init
+        self.run_time_timer = QTimer(self)
+        self.run_time_timer.setInterval(1000)
+        self.run_time_timer.timeout.connect(self.timer)
+        self.run_time_sec = 0
+        self.run_time_timer.start()
 
         # Connecting signal slots
         self.connect_signals_slots()
@@ -175,6 +137,17 @@ class Window(QMainWindow, Ui_MainWindow):
         self.openGL.resizeGL(size.width(), size.height())
         self.openGL.updateGL()
 
+    def timer(self, reset=False):
+        if self.labelLastStateVar.text() == "Run" and reset is False:
+            self.run_time_sec += 1
+            self.sender.remaining_time -= 1
+            self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
+            self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
+        if reset is True:
+            self.run_time_sec = 0
+            self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
+            self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
+
     def load_file(self):
         self.code_model.clear()
 
@@ -213,9 +186,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.is_file_load = True
         self.prepare_to_streaming()
-
-        if self.is_first_run is False:
-            self.run_time_clock.reset()
 
         self.sender.calculate_remaining_time()
         self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
@@ -309,11 +279,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.sender.job_run()
         self.labelLastStateVar.setText("Run")
-
-        if self.is_first_run:
-            self.run_time_clock.start()
-            self.last_state_checker.start()
-            self.is_first_run = False
 
     def general(self):
         dialog_general = DialogGeneral(self, self.sender, self.is_incremental_streaming, self.save_logs_to_file)
@@ -502,16 +467,6 @@ class Window(QMainWindow, Ui_MainWindow):
             with open(self.logs, 'a') as f:
                 f.writelines(log + "\n")
 
-    def check_state(self):
-        is_running = True
-        while True:
-            if self.labelLastStateVar.text() != "Run" and is_running is True:
-                self.run_time_clock.pause()
-                is_running = False
-            elif self.labelLastStateVar.text() == "Run" and is_running is False:
-                self.run_time_clock.resume()
-                is_running = True
-
     def closeEvent(self, event):
         config = configparser.ConfigParser()
         config['SENDER'] = {'SaveLogs': str(self.save_logs_to_file),
@@ -587,6 +542,7 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
             self.spinBoxMaxFeed.setEnabled(True)
             self.spinBoxMinFeed.setEnabled(True)
             self.pushButtonSave.setEnabled(True)
+            self.is_rt_feed_rate_on = True
         else:
             self.checkBoxTakeMaxFeed.setEnabled(False)
             self.checkBoxTakeMinFeed.setEnabled(False)
@@ -595,6 +551,7 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
             self.spinBoxMaxFeed.setEnabled(False)
             self.spinBoxMinFeed.setEnabled(False)
             self.pushButtonSave.setEnabled(False)
+            self.is_rt_feed_rate_on = False
 
     def save(self):
         if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() <= 0:

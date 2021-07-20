@@ -709,17 +709,19 @@ class GCodeSender:
                 last_motion_mode = line[line.find("G"):line.find("G") + 3]
 
             feed_rate = self.calculate_feed_rate(line)
+            if line.find("F") != -1:
+                start = line.find("F")
+                stop = start + 1
+                while line[stop].isalpha() is False and stop < len(line) - 1 and line[stop] != ";":
+                    stop += 1
+                if stop == len(line) - 1:
+                    line = line[0:start]
+                else:
+                    line = line[0:start] + line[stop + 1:len(line)]
+
             if feed_rate != last_feed_rate and feed_rate is not None and last_motion_mode != "G00":
-                if line.find("F") != -1:
-                    start = line.find("F")
-                    stop = start + 1
-                    while line[stop].isalpha() is False and stop < len(line) - 1 and line[stop] != ";":
-                        stop += 1
-                    if stop == len(line) - 1:
-                        line = line[0:start]
-                    else:
-                        line = line[0:start] + line[stop + 1:len(line)]
-                line += "F" + str(self.calculate_feed_rate(line))
+                line += "F" + str(feed_rate)
+                last_feed_rate = feed_rate
             buffer_with_new_feed_rate.append(line)
 
         with open(path[0], 'w') as file:
@@ -750,7 +752,8 @@ class GCodeSender:
             self._interface.write(line)
 
     def calculate_remaining_time(self):
-        self.remaining_time = ((self.travel_distance_buffer - self.travel_distance_current) / float(self.gps[10])) * 60
+        if float(self.gps[10]) > 0:
+            self.remaining_time = ((self.travel_distance_buffer - self.travel_distance_current) / float(self.gps[10])) * 60
 
     def calculate_buffer_travel_distance(self):
         if self.starting_line == 1 and self.ending_line == self.buffer_size:
