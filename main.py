@@ -87,6 +87,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.run_time_timer.setInterval(1000)
         self.run_time_timer.timeout.connect(self.timer)
         self.run_time_sec = 0
+        self.remaining_time = 0
         self.run_time_timer.start()
 
         # Connecting signal slots
@@ -140,13 +141,15 @@ class Window(QMainWindow, Ui_MainWindow):
     def timer(self, reset=False):
         if self.labelLastStateVar.text() == "Run" and reset is False:
             self.run_time_sec += 1
-            self.sender.remaining_time -= 1
+            self.remaining_time -= 1
             self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
-            self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.sender.remaining_time)))
+            self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.remaining_time)))
         if reset is True:
             self.run_time_sec = 0
             self.labelRuntimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
             self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
+        self.remaining_time = self.sender.remaining_time
+
 
     def load_file(self):
         self.code_model.clear()

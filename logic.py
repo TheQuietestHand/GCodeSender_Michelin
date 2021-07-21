@@ -41,7 +41,7 @@ class GCodeSender:
             "0",  # spindle state
             "5",  # coolant state
             "0",  # tool number
-            "100",  # current feed
+            "500",  # current feed
             "0",  # spindle speed
         ]
 
@@ -318,7 +318,7 @@ class GCodeSender:
             self.logger.warning("Cant run job. Nothing in the buffer!")
             return
 
-        self.current_line_number = self._starting_line
+        self.current_line_number = self._starting_line - 1
 
         self.travel_distance_current = 0.0
 
@@ -556,7 +556,7 @@ class GCodeSender:
     def _handle_ok(self):
         if self.incremental_streaming is False:
             self.force_send_command_nr += 1
-            queued_commands = self.ending_line - self.starting_line + 1 - self.force_send_command_nr
+            queued_commands = self.ending_line - (self.starting_line + 1) - self.force_send_command_nr
             self._callback("Q", queued_commands)
         if self._streaming_complete is False:
             self._rx_buffer_fill_pop()
@@ -674,7 +674,7 @@ class GCodeSender:
         if len(self._rx_buffer_fill) > 0:
             self._rx_buffer_fill.pop(0)
             processed_command = self._rx_buffer_backlog.pop(0)
-            ln = self._rx_buffer_backlog_line_number.pop(0) - 1
+            ln = self._rx_buffer_backlog_line_number.pop(0)
             self._callback("Processed command", ln, processed_command)
 
         if self._streaming_src_ends is True and len(self._rx_buffer_fill) == 0:
@@ -687,7 +687,7 @@ class GCodeSender:
                 self._set_next_line()
 
             if self._streaming_src_ends is False and self._rx_buffer_can_receive_current_line() and \
-                    self.current_line_number <= self._ending_line:
+                    self.current_line_number < self._ending_line:
                 self._send_current_line()
             else:
                 break
@@ -754,15 +754,17 @@ class GCodeSender:
     def calculate_remaining_time(self):
         if float(self.gps[10]) > 0:
             self.remaining_time = ((self.travel_distance_buffer - self.travel_distance_current) / float(self.gps[10])) * 60
+            if self.remaining_time < 1:
+                self.remaining_time = 1.0
 
     def calculate_buffer_travel_distance(self):
+        self.travel_distance_buffer = 0.0
         if self.starting_line == 1 and self.ending_line == self.buffer_size:
             for x in range(0, len(self.points) - 2):
                 a = numpy.array((self.points[x][0], self.points[x][1], self.points[x][2]))
                 b = numpy.array((self.points[x + 1][0], self.points[x + 1][1], self.points[x + 1][2]))
                 self.travel_distance_buffer += numpy.linalg.norm(a - b)
         else:
-            self.travel_distance_buffer = 0.0
             motion_line_nr = self.is_motion_line[0:self.starting_line-1].count(True)
             self.motion_line_nr = motion_line_nr
             for x in range(self.starting_line - 1, self.ending_line - 1):
@@ -789,10 +791,10 @@ class GCodeSender:
 
     def _set_next_line(self, send_comments=False):
         if self.incremental_streaming:
-            queued_commands = self.ending_line - self._current_line_nr + 1
+            queued_commands = self.ending_line - (self._current_line_nr + 1)
             self._callback("Q", queued_commands)
 
-        if self._current_line_nr < self.buffer_size:
+        if self._current_line_nr + 1 < self.buffer_size:
             line = self.buffer[self._current_line_nr].strip()
             if line.find("G") != -1:
                 self.last_motion_mode = line[line.find("G"):line.find("G") + 3]
