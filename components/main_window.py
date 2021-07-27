@@ -529,6 +529,8 @@ class Ui_MainWindow(object):
         self.gridLayout_11 = QtWidgets.QGridLayout(self.groupBoxLogs)
         self.gridLayout_11.setObjectName("gridLayout_11")
         self.listViewLogs = QtWidgets.QListView(self.groupBoxLogs)
+        self.listViewLogs.setAutoScroll(False)
+        self.listViewLogs.setProperty("isWrapping", False)
         self.listViewLogs.setObjectName("listViewLogs")
         self.gridLayout_11.addWidget(self.listViewLogs, 0, 0, 1, 1)
         self.gridLayout_3.addWidget(self.groupBoxLogs, 0, 0, 1, 1)

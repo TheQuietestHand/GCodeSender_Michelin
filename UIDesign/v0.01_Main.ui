@@ -1086,7 +1086,14 @@
            </property>
            <layout class="QGridLayout" name="gridLayout_11">
             <item row="0" column="0">
-             <widget class="QListView" name="listViewLogs"/>
+             <widget class="QListView" name="listViewLogs">
+              <property name="autoScroll">
+               <bool>false</bool>
+              </property>
+              <property name="isWrapping" stdset="0">
+               <bool>false</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>

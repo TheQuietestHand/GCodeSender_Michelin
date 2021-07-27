@@ -20,11 +20,11 @@ class MyOpenGlWidget(QtOpenGL.QGLWidget):
             self.clrVBO = vbo.VBO(np.reshape(self.colors, (1, -1)).astype(np.float32))
 
             edges = []
-            for x in range(0, len(self.points) - 1):
-                edges.append(x)
-                edges.append(x + 1)
-                edges.append(x + 1)
-                edges.append(x)
+            for e in range(0, len(self.points) - 1):
+                edges.append(e)
+                edges.append(e + 1)
+                edges.append(e + 1)
+                edges.append(e)
             self.edges = np.array(edges)
 
             self.points_cube = np.array(cube_points)

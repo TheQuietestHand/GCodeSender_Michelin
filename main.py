@@ -150,7 +150,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.labelRemainingTimeVar.setText(time.strftime('%H:%M:%S', time.gmtime(self.run_time_sec)))
         self.remaining_time = self.sender.remaining_time
 
-
     def load_file(self):
         self.code_model.clear()
 
@@ -433,6 +432,9 @@ class Window(QMainWindow, Ui_MainWindow):
         args = []
         for d in data:
             args.append(str(d))
+
+        if eventstring == "Streaming source ends" or eventstring == "Streaming disabled":
+            self.labelLastStateVar.setText("Idle")
 
         if eventstring == "Q":
             self.labelQueuedCommandsVar.setText(args[0])

@@ -110,7 +110,6 @@ class GCodeSender:
 
         self._current_line = ""
         self._current_line_sent = True
-        self._streaming_mode = None
         self._wait_empty_buffer = False
         self._streaming_complete = True
         self.job_finished = True
@@ -642,6 +641,7 @@ class GCodeSender:
             return
 
         if self.current_line_number == self._ending_line:
+            self._set_streaming_src_ends(True)
             return
 
         if self._incremental_streaming:
@@ -824,9 +824,11 @@ class GCodeSender:
 
     def _set_streaming_complete(self, x):
         self._streaming_complete = x
+        self._callback("Streaming complete")
 
     def _set_streaming_src_ends(self, x):
         self._streaming_src_ends = x
+        self._callback("Streaming source ends")
 
     def get_hash_state(self):
         if self.cmode == "Hold":
