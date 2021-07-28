@@ -3,7 +3,6 @@ import os
 import sys
 import serial.tools.list_ports
 import time
-import threading
 import configparser
 
 from PyQt5.QtCore import QTimer
@@ -245,6 +244,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def feed_hold(self):
         self.pushButtonPause.setEnabled(False)
         self.pushButtonResume.setEnabled(True)
+        self.sender.send_immediately("?")
 
         self.sender.feed_hold()
         self.labelLastStateVar.setText("Hold")
@@ -260,6 +260,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.pushButtonPause.setEnabled(False)
         self.pushButtonResume.setEnabled(False)
         self.pushButtonStop.setEnabled(False)
+        self.sender.send_immediately("?")
 
         self.sender.kill_alarm()
         self.labelLastStateVar.setText("Hold")
@@ -315,7 +316,6 @@ class Window(QMainWindow, Ui_MainWindow):
     def prepare_to_streaming(self):
         if self.is_file_load is True and self.sender.is_connected() is True:
             self.pushButtonRunCode.setEnabled(True)
-            self.spinBoxPeriod.setEnabled(True)
             self.pushButtonHome.setEnabled(True)
             self.pushButtonSetZero.setEnabled(True)
             self.pushButtonZero.setEnabled(True)
@@ -406,7 +406,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def set_buttons_disabled(self):
         self.pushButtonRunCode.setEnabled(False)
-        self.spinBoxPeriod.setEnabled(False)
 
         self.pushButtonPause.setEnabled(False)
         self.pushButtonResume.setEnabled(False)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'UI/v0.01_Filtering.ui'
+# Form implementation generated from reading ui file 'UIDesign/v0.01_Filtering.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -19,19 +19,21 @@ class Ui_DialogFiltering(object):
         DialogFiltering.setMinimumSize(QtCore.QSize(285, 90))
         DialogFiltering.setMaximumSize(QtCore.QSize(285, 90))
         DialogFiltering.setBaseSize(QtCore.QSize(260, 90))
-        self.widget = QtWidgets.QWidget(DialogFiltering)
-        self.widget.setGeometry(QtCore.QRect(10, 10, 266, 73))
-        self.widget.setObjectName("widget")
-        self.gridLayout = QtWidgets.QGridLayout(self.widget)
+        self.layoutWidget = QtWidgets.QWidget(DialogFiltering)
+        self.layoutWidget.setGeometry(QtCore.QRect(10, 10, 266, 73))
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.gridLayout = QtWidgets.QGridLayout(self.layoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
-        self.checkBoxLimitZRate = QtWidgets.QCheckBox(self.widget)
+        self.checkBoxLimitZRate = QtWidgets.QCheckBox(self.layoutWidget)
+        self.checkBoxLimitZRate.setEnabled(False)
         self.checkBoxLimitZRate.setObjectName("checkBoxLimitZRate")
         self.gridLayout.addWidget(self.checkBoxLimitZRate, 0, 0, 1, 1)
-        self.labelZRateLimit = QtWidgets.QLabel(self.widget)
+        self.labelZRateLimit = QtWidgets.QLabel(self.layoutWidget)
+        self.labelZRateLimit.setEnabled(False)
         self.labelZRateLimit.setObjectName("labelZRateLimit")
         self.gridLayout.addWidget(self.labelZRateLimit, 0, 1, 1, 1)
-        self.doubleSpinBoxZRateLimit = QtWidgets.QDoubleSpinBox(self.widget)
+        self.doubleSpinBoxZRateLimit = QtWidgets.QDoubleSpinBox(self.layoutWidget)
         self.doubleSpinBoxZRateLimit.setEnabled(False)
         self.doubleSpinBoxZRateLimit.setFrame(False)
         self.doubleSpinBoxZRateLimit.setMinimum(0.01)
@@ -40,10 +42,11 @@ class Ui_DialogFiltering(object):
         self.doubleSpinBoxZRateLimit.setProperty("value", 200.0)
         self.doubleSpinBoxZRateLimit.setObjectName("doubleSpinBoxZRateLimit")
         self.gridLayout.addWidget(self.doubleSpinBoxZRateLimit, 0, 2, 1, 1)
-        self.labelXYRate = QtWidgets.QLabel(self.widget)
+        self.labelXYRate = QtWidgets.QLabel(self.layoutWidget)
+        self.labelXYRate.setEnabled(False)
         self.labelXYRate.setObjectName("labelXYRate")
         self.gridLayout.addWidget(self.labelXYRate, 1, 1, 1, 1)
-        self.doubleSpinBoxXYRate = QtWidgets.QDoubleSpinBox(self.widget)
+        self.doubleSpinBoxXYRate = QtWidgets.QDoubleSpinBox(self.layoutWidget)
         self.doubleSpinBoxXYRate.setEnabled(False)
         self.doubleSpinBoxXYRate.setFrame(False)
         self.doubleSpinBoxXYRate.setMinimum(0.01)
@@ -52,16 +55,18 @@ class Ui_DialogFiltering(object):
         self.doubleSpinBoxXYRate.setProperty("value", 1000.0)
         self.doubleSpinBoxXYRate.setObjectName("doubleSpinBoxXYRate")
         self.gridLayout.addWidget(self.doubleSpinBoxXYRate, 1, 2, 1, 1)
-        self.labelGrblLineBufferSize = QtWidgets.QLabel(self.widget)
+        self.labelGrblLineBufferSize = QtWidgets.QLabel(self.layoutWidget)
+        self.labelGrblLineBufferSize.setEnabled(False)
         self.labelGrblLineBufferSize.setObjectName("labelGrblLineBufferSize")
         self.gridLayout.addWidget(self.labelGrblLineBufferSize, 2, 0, 1, 1)
-        self.spinBoxGrblLineBufferSize = QtWidgets.QSpinBox(self.widget)
+        self.spinBoxGrblLineBufferSize = QtWidgets.QSpinBox(self.layoutWidget)
+        self.spinBoxGrblLineBufferSize.setEnabled(False)
         self.spinBoxGrblLineBufferSize.setFrame(False)
         self.spinBoxGrblLineBufferSize.setMinimum(1)
         self.spinBoxGrblLineBufferSize.setProperty("value", 50)
         self.spinBoxGrblLineBufferSize.setObjectName("spinBoxGrblLineBufferSize")
         self.gridLayout.addWidget(self.spinBoxGrblLineBufferSize, 2, 1, 1, 1)
-        self.pushButtonOk = QtWidgets.QPushButton(self.widget)
+        self.pushButtonOk = QtWidgets.QPushButton(self.layoutWidget)
         self.pushButtonOk.setObjectName("pushButtonOk")
         self.gridLayout.addWidget(self.pushButtonOk, 2, 2, 1, 1)
 
@@ -77,13 +82,3 @@ class Ui_DialogFiltering(object):
         self.labelXYRate.setText(_translate("DialogFiltering", "XY rate (mm):"))
         self.labelGrblLineBufferSize.setText(_translate("DialogFiltering", "Grbl line buffer size:"))
         self.pushButtonOk.setText(_translate("DialogFiltering", "Ok"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    DialogFiltering = QtWidgets.QDialog()
-    ui = Ui_DialogFiltering()
-    ui.setupUi(DialogFiltering)
-    DialogFiltering.show()
-    sys.exit(app.exec_())

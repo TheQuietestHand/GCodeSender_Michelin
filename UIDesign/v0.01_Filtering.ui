@@ -34,7 +34,7 @@
   <property name="windowTitle">
    <string>Filtering</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -46,6 +46,9 @@
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
      <widget class="QCheckBox" name="checkBoxLimitZRate">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="text">
        <string>Limit Z rate</string>
       </property>
@@ -53,6 +56,9 @@
     </item>
     <item row="0" column="1">
      <widget class="QLabel" name="labelZRateLimit">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="text">
        <string>Z rate limit (mm):</string>
       </property>
@@ -82,6 +88,9 @@
     </item>
     <item row="1" column="1">
      <widget class="QLabel" name="labelXYRate">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="text">
        <string>XY rate (mm):</string>
       </property>
@@ -111,6 +120,9 @@
     </item>
     <item row="2" column="0">
      <widget class="QLabel" name="labelGrblLineBufferSize">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="text">
        <string>Grbl line buffer size:</string>
       </property>
@@ -118,6 +130,9 @@
     </item>
     <item row="2" column="1">
      <widget class="QSpinBox" name="spinBoxGrblLineBufferSize">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="frame">
        <bool>false</bool>
       </property>

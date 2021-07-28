@@ -53,6 +53,9 @@
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="labelSWaitToResponde">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Seconds wait to response:</string>
        </property>
@@ -67,6 +70,9 @@
      </item>
      <item row="2" column="1">
       <widget class="QSpinBox" name="spinBoxSWaitToResponse">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="frame">
         <bool>false</bool>
        </property>
@@ -83,6 +89,9 @@
      </item>
      <item row="3" column="1">
       <widget class="QDoubleSpinBox" name="doubleSpinBoxZJogRate">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="frame">
         <bool>false</bool>
        </property>
@@ -102,6 +111,9 @@
      </item>
      <item row="3" column="0">
       <widget class="QLabel" name="labelZJogRate">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Z-Jog rate (mm/min):</string>
        </property>
