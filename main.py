@@ -578,7 +578,7 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
         self.sender.save_buffer_with_new_feed_rate(response)
         self.close()
 
-    def closeEvent(self, event, flag=None):
+    def closeEvent(self, event):
         if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() <= 0:
             self.sender.preprocessor.do_feed_override = False
             if self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value() < 0:
@@ -587,18 +587,6 @@ class DialogFeedRate(QDialog, Ui_DialogFeedRate):
         else:
             self.sender.difF = self.spinBoxMaxFeed.value() - self.spinBoxMinFeed.value()
             self.sender.preprocessor.do_feed_override = self.is_rt_feed_rate_on
-
-        if flag is not None:
-            file_filter = "NC files (*.nc)|*.nc"
-            response = QFileDialog.getSaveFileName(
-                parent=self,
-                caption="Select a data file",
-                directory='Nowy.nc',
-                filter=file_filter,
-                initialFilter="NC files (*.nc)|*.nc"
-            )
-            self.sender.save_buffer_with_new_feed_rate(response)
-
 
 class DialogGeneral(QDialog, Ui_DialogGeneral):
     def __init__(self, parent=None, sender=None, is_incremental_streaming=True, save_logs_to_file=False):

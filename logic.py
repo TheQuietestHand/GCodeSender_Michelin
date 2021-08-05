@@ -698,7 +698,7 @@ class GCodeSender:
         return rx_free_bytes >= required_bytes
 
     def save_buffer_with_new_feed_rate(self, path=None):
-        if self.preprocessor.do_feed_override is True or path is None or self.buffer_size == 0:
+        if path is None or self.buffer_size == 0:
             return
 
         last_feed_rate = None
